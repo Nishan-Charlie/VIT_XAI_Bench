@@ -1,0 +1,463 @@
+Initial Win CP for (console input, console output, system): (CP437, CP437, CP1252)
+I changed them all to CP1252
+Rc files read (in order):
+  NONE
+Latexmk: This is Latexmk, John Collins, 9 March 2026. Version 4.88.
+Latexmk: applying rule 'pdflatex'...
+Rule 'pdflatex':  Reasons for rerun
+Changed files or newly in use/created:
+  c:/Users/nisha/OneDrive/Desktop/Research/Explainable Bench Mark/paper.tex
+  paper.tex
+Category 'changed_user':
+  c:/Users/nisha/OneDrive/Desktop/Research/Explainable Bench Mark/paper.tex
+  paper.tex
+
+------------
+Run number 1 of rule 'pdflatex'
+------------
+------------
+Running 'pdflatex  -interaction=nonstopmode -halt-on-error -recorder  "paper.tex"'
+------------
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex)
+ restricted \write18 enabled.
+entering extended mode
+(./paper.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+(c:/texlive/2026/texmf-dist/tex/latex/ieeetran/IEEEtran.cls
+Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
+-- See the "IEEEtran_HOWTO" manual for usage information.
+-- http://www.michaelshell.org/tex/ieeetran/
+(c:/texlive/2026/texmf-dist/tex/latex/psnfss/ot1ptm.fd)
+-- Using 8.5in x 11in (letter) paper.
+-- Using PDF output.
+-- This is a 10 point document.
+) (c:/texlive/2026/texmf-dist/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(c:/texlive/2026/texmf-dist/tex/latex/amsmath/amstext.sty
+(c:/texlive/2026/texmf-dist/tex/latex/amsmath/amsgen.sty))
+(c:/texlive/2026/texmf-dist/tex/latex/amsmath/amsbsy.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/amsmath/amsopn.sty))
+(c:/texlive/2026/texmf-dist/tex/latex/amsfonts/amsfonts.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/amsfonts/amssymb.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/amscls/amsthm.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/tools/bm.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/mathtools/mathtools.sty
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/keyval.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/tools/calc.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/mathtools/mhsetup.sty))
+(c:/texlive/2026/texmf-dist/tex/latex/caption/subcaption.sty
+(c:/texlive/2026/texmf-dist/tex/latex/caption/caption.sty
+(c:/texlive/2026/texmf-dist/tex/latex/caption/caption3.sty)
+
+Package caption Warning: Unknown document class (or package),
+(caption)                standard defaults will be used.
+See the caption package documentation for explanation.
+
+)) (c:/texlive/2026/texmf-dist/tex/latex/algorithms/algorithm.sty
+(c:/texlive/2026/texmf-dist/tex/latex/float/float.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/base/ifthen.sty))
+(c:/texlive/2026/texmf-dist/tex/latex/algorithmicx/algpseudocode.sty
+(c:/texlive/2026/texmf-dist/tex/latex/algorithmicx/algorithmicx.sty
+Document Style algorithmicx 1.2 - a greatly improved `algorithmic' style
+)
+Document Style - pseudocode environments for use with the `algorithmicx' style
+) (c:/texlive/2026/texmf-dist/tex/latex/tools/array.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/booktabs/booktabs.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/tools/tabularx.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/multirow/multirow.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/graphicx.sty
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/graphics.sty
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/trig.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/graphics-cfg/graphics.cfg)
+(c:/texlive/2026/texmf-dist/tex/latex/graphics-def/pdftex.def)))
+(c:/texlive/2026/texmf-dist/tex/latex/sttools/stfloats.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/base/inputenc.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/base/textcomp.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/url/url.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/tools/verbatim.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/psnfss/pifont.sty
+(c:/texlive/2026/texmf-dist/tex/latex/psnfss/upzd.fd)
+(c:/texlive/2026/texmf-dist/tex/latex/psnfss/upsy.fd))
+(c:/texlive/2026/texmf-dist/tex/latex/bbm-macros/bbm.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/enumitem/enumitem.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/preprint/balance.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/comment/comment.sty
+Excluding comment 'comment')
+(c:/texlive/2026/texmf-dist/tex/latex/xcolor/xcolor.sty
+(c:/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg)
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx))
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/dvipsnam.def)
+(c:/texlive/2026/texmf-dist/tex/latex/lineno/lineno.sty
+(c:/texlive/2026/texmf-dist/tex/latex/etoolbox/etoolbox.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/kvoptions/kvoptions.sty
+(c:/texlive/2026/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/kvsetkeys/kvsetkeys.sty)))
+(c:/texlive/2026/texmf-dist/tex/latex/cite/cite.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/hyperref/hyperref.sty
+(c:/texlive/2026/texmf-dist/tex/generic/iftex/iftex.sty)
+(c:/texlive/2026/texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty)
+(c:/texlive/2026/texmf-dist/tex/generic/pdfescape/pdfescape.sty
+(c:/texlive/2026/texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty
+(c:/texlive/2026/texmf-dist/tex/generic/infwarerr/infwarerr.sty)))
+(c:/texlive/2026/texmf-dist/tex/latex/hycolor/hycolor.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/hyperref/nameref.sty
+(c:/texlive/2026/texmf-dist/tex/latex/refcount/refcount.sty)
+(c:/texlive/2026/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty))
+(c:/texlive/2026/texmf-dist/tex/generic/stringenc/stringenc.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/hyperref/pd1enc.def)
+(c:/texlive/2026/texmf-dist/tex/generic/intcalc/intcalc.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/hyperref/puenc.def)
+(c:/texlive/2026/texmf-dist/tex/generic/bitset/bitset.sty
+(c:/texlive/2026/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty)))
+(c:/texlive/2026/texmf-dist/tex/latex/hyperref/hpdftex.def
+(c:/texlive/2026/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
+(c:/texlive/2026/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty)))
+(c:/texlive/2026/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def)
+
+LaTeX Warning: Unused global option(s):
+    [lettersize].
+
+(./paper.aux)
+-- Lines per column: 58 (exact).
+(c:/texlive/2026/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+) (c:/texlive/2026/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+(c:/texlive/2026/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg))
+(./paper.out) (./paper.out)
+(c:/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd)
+(c:/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd) [1{c:/texlive/2026/texm
+f-var/fonts/map/pdftex/updmap/pdftex.map}{c:/texlive/2026/texmf-dist/fonts/enc/
+dvips/base/8r.enc}]
+Underfull \hbox (badness 2837) in paragraph at lines 127--128
+[]\OT1/ptm/b/n/10 New ca-pa-bil-i-ties. \OT1/ptm/m/n/10 Con-ser-va-tion yields 
+stage-localized
+[2 <./figures/bench_taxonomy.png>]
+Overfull \hbox (1.89435pt too wide) in paragraph at lines 266--284
+ [][] 
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[3] [4 <./figures/attnlrp_propagation.png (PNG copy)>]
+(c:/texlive/2026/texmf-dist/tex/latex/psnfss/ot1pcr.fd) [5]
+Underfull \vbox (badness 4391) has occurred while \output is active
+Underfull \vbox (badness 4391) has occurred while \output is active [6 <./figur
+es/bench_fc_noise.png>] [7] [8 <./figures/qualitative_gallery.png>]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Overfull \hbox (22.00072pt too wide) in paragraph at lines 515--527
+ [][] 
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[9]
+Underfull \hbox (badness 4096) in paragraph at lines 548--548
+[]\OT1/ptm/m/n/10 Fig. 7: |\OT1/ptm/b/n/10 Text-conditioned multi-modal at-tri-
+bu-tion on
+
+Underfull \hbox (badness 1990) in paragraph at lines 548--548
+\OT1/ptm/b/n/10 CLIP. \OT1/ptm/m/n/10 HiLRP at-tributes the image-text sim-i-la
+r-ity $\OML/cmm/m/it/10 s \OT1/cmr/m/n/10 =
+[10 <./figures/stage_localization.png>]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 579.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\gamma' on input line 579.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 579.
+
+[11 <./figures/rq2_maps.png> <./figures/clip_multimodal.png>]
+Underfull \hbox (badness 2735) in paragraph at lines 609--610
+[]\OT1/ptm/b/n/10 Evaluation caveats. \OT1/ptm/m/n/10 The Point-ing Game is sof
+t on
+
+Underfull \hbox (badness 7981) in paragraph at lines 613--614
+[]\OT1/ptm/m/n/10 Hierarchical and hy-brid Vi-sion Trans-form-ers broke
+(./paper.bbl
+Underfull \hbox (badness 2245) in paragraph at lines 79--82
+\OT1/ptm/m/n/8 ``Smooth-grad: Re-mov-ing noise by adding noise,'' \OT1/ptm/m/it
+/8 arXiv preprint
+[12]) [13] (./paper.aux)
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+ )
+(see the transcript file for additional information)<c:/texlive/2026/texmf-dist
+/fonts/type1/public/amsfonts/cm/cmbx8.pfb><c:/texlive/2026/texmf-dist/fonts/typ
+e1/public/amsfonts/cm/cmex10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmmi10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmmi5.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.
+pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/te
+xlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb><c:/texlive/2026
+/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmmib8.pfb><c:/texlive/2026/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2026/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmr5.pfb><c:/texlive/2026/texmf-dist/fonts/type1/p
+ublic/amsfonts/cm/cmr7.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9
+.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/
+texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb><c:/texlive/20
+26/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb><c:/texlive/2026/texmf-d
+ist/fonts/type1/public/amsfonts/cm/cmsy7.pfb><c:/texlive/2026/texmf-dist/fonts/
+type1/public/amsfonts/cm/cmsy8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/
+courier/ucrr8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/times/utmb8a.pfb
+><c:/texlive/2026/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb><c:/texlive/2026
+/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><c:/texlive/2026/texmf-dist/fonts/
+type1/urw/times/utmri8a.pfb>
+Output written on paper.pdf (13 pages, 11025883 bytes).
+Transcript written on paper.log.
+Latexmk: Getting log file 'paper.log'
+Latexmk: Examining 'paper.fls'
+Latexmk: Examining 'paper.log'
+Latexmk: Found input bbl file 'paper.bbl'
+Latexmk: References changed.
+Latexmk: Log file says output to 'paper.pdf'
+Latexmk: Using bibtex to make bibliography file(s).
+  ===Source file 'paper.bbl' for 'pdflatex'
+Latexmk: Found bibliography file(s):
+  ./refs.bib
+Latexmk: applying rule 'bibtex paper'...
+Rule 'bibtex paper':  Reasons for rerun
+Changed files or newly in use/created:
+  paper.aux
+
+------------
+Run number 1 of rule 'bibtex paper'
+------------
+------------
+Running 'bibtex  "paper.aux"'
+------------
+This is BibTeX, Version 0.99e (TeX Live 2026)
+The top-level auxiliary file: paper.aux
+The style file: IEEEtran.bst
+Database file #1: refs.bib
+-- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.
+-- http://www.michaelshell.org/tex/ieeetran/bibtex/
+-- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
+
+Done.
+Latexmk: applying rule 'pdflatex'...
+Rule 'pdflatex':  Reasons for rerun
+Changed files or newly in use/created:
+  paper.aux
+
+------------
+Run number 2 of rule 'pdflatex'
+------------
+------------
+Running 'pdflatex  -interaction=nonstopmode -halt-on-error -recorder  "paper.tex"'
+------------
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex)
+ restricted \write18 enabled.
+entering extended mode
+(./paper.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+(c:/texlive/2026/texmf-dist/tex/latex/ieeetran/IEEEtran.cls
+Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
+-- See the "IEEEtran_HOWTO" manual for usage information.
+-- http://www.michaelshell.org/tex/ieeetran/
+(c:/texlive/2026/texmf-dist/tex/latex/psnfss/ot1ptm.fd)
+-- Using 8.5in x 11in (letter) paper.
+-- Using PDF output.
+-- This is a 10 point document.
+) (c:/texlive/2026/texmf-dist/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(c:/texlive/2026/texmf-dist/tex/latex/amsmath/amstext.sty
+(c:/texlive/2026/texmf-dist/tex/latex/amsmath/amsgen.sty))
+(c:/texlive/2026/texmf-dist/tex/latex/amsmath/amsbsy.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/amsmath/amsopn.sty))
+(c:/texlive/2026/texmf-dist/tex/latex/amsfonts/amsfonts.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/amsfonts/amssymb.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/amscls/amsthm.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/tools/bm.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/mathtools/mathtools.sty
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/keyval.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/tools/calc.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/mathtools/mhsetup.sty))
+(c:/texlive/2026/texmf-dist/tex/latex/caption/subcaption.sty
+(c:/texlive/2026/texmf-dist/tex/latex/caption/caption.sty
+(c:/texlive/2026/texmf-dist/tex/latex/caption/caption3.sty)
+
+Package caption Warning: Unknown document class (or package),
+(caption)                standard defaults will be used.
+See the caption package documentation for explanation.
+
+)) (c:/texlive/2026/texmf-dist/tex/latex/algorithms/algorithm.sty
+(c:/texlive/2026/texmf-dist/tex/latex/float/float.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/base/ifthen.sty))
+(c:/texlive/2026/texmf-dist/tex/latex/algorithmicx/algpseudocode.sty
+(c:/texlive/2026/texmf-dist/tex/latex/algorithmicx/algorithmicx.sty
+Document Style algorithmicx 1.2 - a greatly improved `algorithmic' style
+)
+Document Style - pseudocode environments for use with the `algorithmicx' style
+) (c:/texlive/2026/texmf-dist/tex/latex/tools/array.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/booktabs/booktabs.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/tools/tabularx.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/multirow/multirow.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/graphicx.sty
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/graphics.sty
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/trig.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/graphics-cfg/graphics.cfg)
+(c:/texlive/2026/texmf-dist/tex/latex/graphics-def/pdftex.def)))
+(c:/texlive/2026/texmf-dist/tex/latex/sttools/stfloats.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/base/inputenc.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/base/textcomp.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/url/url.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/tools/verbatim.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/psnfss/pifont.sty
+(c:/texlive/2026/texmf-dist/tex/latex/psnfss/upzd.fd)
+(c:/texlive/2026/texmf-dist/tex/latex/psnfss/upsy.fd))
+(c:/texlive/2026/texmf-dist/tex/latex/bbm-macros/bbm.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/enumitem/enumitem.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/preprint/balance.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/comment/comment.sty
+Excluding comment 'comment')
+(c:/texlive/2026/texmf-dist/tex/latex/xcolor/xcolor.sty
+(c:/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg)
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx))
+(c:/texlive/2026/texmf-dist/tex/latex/graphics/dvipsnam.def)
+(c:/texlive/2026/texmf-dist/tex/latex/lineno/lineno.sty
+(c:/texlive/2026/texmf-dist/tex/latex/etoolbox/etoolbox.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/kvoptions/kvoptions.sty
+(c:/texlive/2026/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/kvsetkeys/kvsetkeys.sty)))
+(c:/texlive/2026/texmf-dist/tex/latex/cite/cite.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/hyperref/hyperref.sty
+(c:/texlive/2026/texmf-dist/tex/generic/iftex/iftex.sty)
+(c:/texlive/2026/texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty)
+(c:/texlive/2026/texmf-dist/tex/generic/pdfescape/pdfescape.sty
+(c:/texlive/2026/texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty
+(c:/texlive/2026/texmf-dist/tex/generic/infwarerr/infwarerr.sty)))
+(c:/texlive/2026/texmf-dist/tex/latex/hycolor/hycolor.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/hyperref/nameref.sty
+(c:/texlive/2026/texmf-dist/tex/latex/refcount/refcount.sty)
+(c:/texlive/2026/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty))
+(c:/texlive/2026/texmf-dist/tex/generic/stringenc/stringenc.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/hyperref/pd1enc.def)
+(c:/texlive/2026/texmf-dist/tex/generic/intcalc/intcalc.sty)
+(c:/texlive/2026/texmf-dist/tex/latex/hyperref/puenc.def)
+(c:/texlive/2026/texmf-dist/tex/generic/bitset/bitset.sty
+(c:/texlive/2026/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty)))
+(c:/texlive/2026/texmf-dist/tex/latex/hyperref/hpdftex.def
+(c:/texlive/2026/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
+(c:/texlive/2026/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty)))
+(c:/texlive/2026/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def)
+
+LaTeX Warning: Unused global option(s):
+    [lettersize].
+
+(./paper.aux)
+-- Lines per column: 58 (exact).
+(c:/texlive/2026/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+) (c:/texlive/2026/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+(c:/texlive/2026/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg))
+(./paper.out) (./paper.out)
+(c:/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd)
+(c:/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd) [1{c:/texlive/2026/texm
+f-var/fonts/map/pdftex/updmap/pdftex.map}{c:/texlive/2026/texmf-dist/fonts/enc/
+dvips/base/8r.enc}]
+Underfull \hbox (badness 2837) in paragraph at lines 127--128
+[]\OT1/ptm/b/n/10 New ca-pa-bil-i-ties. \OT1/ptm/m/n/10 Con-ser-va-tion yields 
+stage-localized
+[2 <./figures/bench_taxonomy.png>]
+Overfull \hbox (1.89435pt too wide) in paragraph at lines 266--284
+ [][] 
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[3] [4 <./figures/attnlrp_propagation.png (PNG copy)>]
+(c:/texlive/2026/texmf-dist/tex/latex/psnfss/ot1pcr.fd) [5]
+Underfull \vbox (badness 4391) has occurred while \output is active
+Underfull \vbox (badness 4391) has occurred while \output is active [6 <./figur
+es/bench_fc_noise.png>] [7] [8 <./figures/qualitative_gallery.png>]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Overfull \hbox (22.00072pt too wide) in paragraph at lines 515--527
+ [][] 
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[9]
+Underfull \hbox (badness 4096) in paragraph at lines 548--548
+[]\OT1/ptm/m/n/10 Fig. 7: |\OT1/ptm/b/n/10 Text-conditioned multi-modal at-tri-
+bu-tion on
+
+Underfull \hbox (badness 1990) in paragraph at lines 548--548
+\OT1/ptm/b/n/10 CLIP. \OT1/ptm/m/n/10 HiLRP at-tributes the image-text sim-i-la
+r-ity $\OML/cmm/m/it/10 s \OT1/cmr/m/n/10 =
+[10 <./figures/stage_localization.png>]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 579.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\gamma' on input line 579.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 579.
+
+[11 <./figures/rq2_maps.png> <./figures/clip_multimodal.png>]
+Underfull \hbox (badness 2735) in paragraph at lines 609--610
+[]\OT1/ptm/b/n/10 Evaluation caveats. \OT1/ptm/m/n/10 The Point-ing Game is sof
+t on
+
+Underfull \hbox (badness 7981) in paragraph at lines 613--614
+[]\OT1/ptm/m/n/10 Hierarchical and hy-brid Vi-sion Trans-form-ers broke
+(./paper.bbl
+Underfull \hbox (badness 2245) in paragraph at lines 79--82
+\OT1/ptm/m/n/8 ``Smooth-grad: Re-mov-ing noise by adding noise,'' \OT1/ptm/m/it
+/8 arXiv preprint
+[12]) [13] (./paper.aux) )
+(see the transcript file for additional information)<c:/texlive/2026/texmf-dist
+/fonts/type1/public/amsfonts/cm/cmbx8.pfb><c:/texlive/2026/texmf-dist/fonts/typ
+e1/public/amsfonts/cm/cmex10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmmi10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmmi5.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.
+pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/te
+xlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb><c:/texlive/2026
+/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmmib8.pfb><c:/texlive/2026/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2026/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmr5.pfb><c:/texlive/2026/texmf-dist/fonts/type1/p
+ublic/amsfonts/cm/cmr7.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9
+.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/
+texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb><c:/texlive/20
+26/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb><c:/texlive/2026/texmf-d
+ist/fonts/type1/public/amsfonts/cm/cmsy7.pfb><c:/texlive/2026/texmf-dist/fonts/
+type1/public/amsfonts/cm/cmsy8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/
+courier/ucrr8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/times/utmb8a.pfb
+><c:/texlive/2026/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb><c:/texlive/2026
+/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><c:/texlive/2026/texmf-dist/fonts/
+type1/urw/times/utmri8a.pfb>
+Output written on paper.pdf (13 pages, 11025883 bytes).
+Transcript written on paper.log.
+Latexmk: Getting log file 'paper.log'
+Latexmk: Examining 'paper.fls'
+Latexmk: Examining 'paper.log'
+Latexmk: Found input bbl file 'paper.bbl'
+Latexmk: Log file says output to 'paper.pdf'
+Latexmk: Using bibtex to make bibliography file(s).
+  ===Source file 'paper.bbl' for 'pdflatex'
+Latexmk: Found bibliography file(s):
+  ./refs.bib
+Latexmk: All targets (paper.pdf) are up-to-date
+
+Reverting Windows console CPs to (in,out) = (437,437)
