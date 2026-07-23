@@ -1,86 +1,111 @@
-# Vision Transformer Explainability Benchmark (XAI-Bench)
+<div align="center">
+  <h1>XAI-Bench: Vision Transformer Explainability Benchmark</h1>
+  <p><strong>A Controlled Benchmark of Attribution Methods Across Architectures, Pretraining Objectives, and Scales for Vision Foundation Models</strong></p>
 
-**A Controlled Benchmark of Attribution Methods Across Architectures, Pretraining Objectives, and Scales for Vision Foundation Models**
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/release/python-390/)
+</div>
 
-## Overview
+<br />
 
-While the field of Explainable AI (XAI) has heavily benchmarked attribution methods on small Convolutional Neural Networks (CNNs), the same rigor has rarely been applied to the Vision Transformer (ViT) foundation models that now dominate the state-of-the-art. 
+## 📖 Overview
 
-This repository provides a controlled, statistically rigorous benchmark that measures attribution **fidelity** across three orthogonal axes:
-1. **Architecture:** CNN vs. ViT
-2. **Pretraining Objective:** Supervised vs. Self-supervised (DINOv2) vs. Masked (MAE/BEiT) vs. Contrastive (CLIP/EVA)
-3. **Model Scale:** Small to Giant
+While Explainable AI (XAI) has been heavily benchmarked on small Convolutional Neural Networks (CNNs), the same rigor is often missing for Vision Transformer (ViT) foundation models. 
 
-It leverages both **exact/causal ground truth** (synthetic and intervention-based, e.g., FunnyBirds) and **proxy faithfulness metrics** to evaluate existing explanation methods.
+**XAI-Bench** provides a controlled, statistically rigorous framework that measures attribution **fidelity** across three orthogonal axes:
+1. 🏗️ **Architecture:** CNN vs. ViT
+2. 🎓 **Pretraining Objective:** Supervised vs. Self-supervised (DINOv2) vs. Masked (MAE/BEiT) vs. Contrastive (CLIP/EVA)
+3. 📈 **Model Scale:** Small to Giant models
 
-## Key Research Questions
+We leverage both **exact/causal ground truth** (synthetic & intervention-based, e.g., FunnyBirds) and **proxy faithfulness metrics** (e.g., Quantus) to evaluate existing explanation methods fairly and transparently.
+
+---
+
+## 🎯 Key Research Questions Evaluated
 
 - **RQ1 — Transfer:** Do attribution-method fidelity rankings established on CNNs hold on ViT foundation models?
 - **RQ2 — Pretraining:** Holding architecture and scale fixed, does the pretraining objective change attribution faithfulness?
 - **RQ3 — Scaling:** How does fidelity scale with model size? Is there an "explainability scaling law"?
-- **RQ4 — Attention vs. the rest:** Do attention-native methods beat gradient/perturbation methods on ViTs, and do *register tokens* fix attention-based attribution?
-- **RQ5 — Metric agreement:** How much do faithfulness metrics agree with each other and with controllable ground truth?
+- **RQ4 — Attention vs. Gradients:** Do attention-native methods beat gradient/perturbation methods on ViTs, and do *register tokens* fix attention-based attribution?
+- **RQ5 — Metric Agreement:** How much do faithfulness metrics agree with each other and with controllable ground truth?
 
-## Benchmark Scope
+---
 
-- **Backbones:** DINOv2 (± register tokens), MAE, BEiT3, CLIP-ViT/EVA02-CLIP, Supervised ViTs, and CNN baselines (ResNet, ConvNeXt).
-- **Attribution Methods:** 
-  - Gradient-based (Saliency, Integrated Gradients, SmoothGrad, etc.)
-  - CAM-based (Grad-CAM, Grad-CAM++)
-  - Attention-native (Rollout, Attention Flow, Chefer/LRP)
-  - Perturbation-based (Occlusion, RISE, LIME, KernelSHAP)
-- **Datasets:** ImageNet-S, ImageNet-1k (bboxes), FunnyBirds (causal GT), and MS COCO.
-- **Metrics:** Evaluated via Quantus (Faithfulness, Localization, Robustness, Complexity).
+## 🔬 Benchmark Scope
 
-## Installation
+### Supported Models
+- **Self-Supervised & Contrastive:** DINOv2 (with/without register tokens), CLIP-ViT, EVA02-CLIP
+- **Masked Autoencoders:** MAE, BEiT3
+- **Supervised Baselines:** Supervised ViTs, ResNet, ConvNeXt
 
-This project requires Python 3.9+.
+### Evaluated XAI Methods
+- **Gradient-based:** Saliency, Integrated Gradients, SmoothGrad
+- **CAM-based:** Grad-CAM, Grad-CAM++
+- **Attention-native:** Rollout, Attention Flow, Chefer/LRP, Hi-LRP
+- **Perturbation-based:** Occlusion, RISE, LIME, KernelSHAP
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/Vision-Transformer-Explainability.git
-cd Vision-Transformer-Explainability
+### Datasets & Metrics
+- **Datasets:** ImageNet-S, ImageNet-1k, FunnyBirds, MS COCO
+- **Metrics:** Faithfulness, Localization, Robustness, and Complexity (powered by [Quantus](https://github.com/understandable-machine-intelligence-lab/Quantus)).
 
-# Install the base package and dependencies
-pip install -e .
+---
 
-# Install optional dependencies for graph clustering, grad-cam, and quantus metrics
-pip install -e ".[extra]"
-```
-Alternatively, you can install from the requirements file:
-```bash
-pip install -r requirements.txt
-```
+## 🚀 Installation & Setup
 
-## Usage
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/XAI-Bench.git
+   cd XAI-Bench
+   ```
 
-### Running the Inference & Explainability Pipeline
+2. **Install the base package:**
+   ```bash
+   pip install -e .
+   ```
 
-The main script `run_imagenets_xai.py` downloads sample images from the ImageNet-S dataset, runs inference using a Vision Transformer (default: ViT-S/16), and extracts multiple explainability heatmaps (Grad-CAM, Integrated Gradients, Attention Rollout) and pixel graph clusters.
+3. *(Optional)* **Install extra dependencies** (for clustering, advanced CAMs, and Quantus metrics):
+   ```bash
+   pip install -e ".[extra]"
+   ```
+
+---
+
+## 💻 Quickstart
+
+### Running the Explanability Pipeline
+
+Use our provided script to download ImageNet-S samples, run inference using a Vision Transformer (default `ViT-S/16`), and extract multiple explainability heatmaps out-of-the-box.
 
 ```bash
 python run_imagenets_xai.py
 ```
-This will:
-1. Load samples from ImageNet-S.
-2. Generate attribution heatmaps (saved to `results/ImageNetS/`).
-3. Apply Louvain clustering on a combined graph representation of the heatmaps.
 
-### Notebooks
-- `foundation_model_xai.ipynb`: A prototype reference notebook showcasing the XAI methods and manual metric implementations.
-- `vit_xai_benchmark.ipynb`: Benchmark prototyping for various ViT models.
-- `Tutorial_INVICTA_Spring_School_2024-VGG19.ipynb`: A tutorial notebook on explaining CNNs.
+**What this script does:**
+1. Loads validation samples.
+2. Generates heatmaps (Grad-CAM, Integrated Gradients, Attention Rollout) in the `results/ImageNetS/` directory.
+3. Applies graph-based Louvain clustering for visualization.
 
-## Project Structure
+### Exploring Interactive Notebooks
+- `visualize_xai_methods.ipynb`: Play around with different models, apply various XAI attribution methods, and visualize the saliency maps interactively!
 
-- `configs/`: Configuration files for different model and benchmark setups.
-- `data/`: Downloaded datasets and samples.
-- `images/`: Generated figures and visualization outputs.
-- `results/`: Output directories for generated heatmaps, clustering results, and metrics.
-- `scripts/`: Utility scripts for large-scale runs.
-- `xai_bench/`: Core python package for the benchmark runner.
-- `RESEARCH_PLAN.md`: The complete project proposal and methodology details.
+---
 
-## License
+## 📂 Repository Structure
 
-*See LICENSE file for details.*
+```
+├── configs/            # Configs for benchmarking sweeps
+├── data/               # Download scripts and dataset structures
+├── images/             # Visualizations and figures
+├── paper/              # LaTeX source for the benchmark paper
+├── results/            # Output directories for attribution maps
+├── scripts/bench/      # Automation scripts for large-scale runs & metric eval
+├── tests/              # Unit tests
+└── xai_bench/          # Core Python framework for XAI methods & models
+```
+
+---
+
+## 📝 License & Citation
+
+This project is open-source under the MIT License. If you use XAI-Bench in your research, please cite our paper:
+*(Citation details coming soon)*
