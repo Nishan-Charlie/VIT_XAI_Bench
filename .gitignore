@@ -12,6 +12,9 @@ archive/
 *.pdf
 *.pt
 *.bat
+.pytest_cache/
+xai_bench.egg-info/
+*.ipynb
 
 checkpoints/
 out.txt
