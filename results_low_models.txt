@@ -1,4 +1,0 @@
-  hilrp 100/200  running 0.840
-  hilrp 200/200  running 0.765
-hilrp vit_base_patch16_224 [imagenets]: 0.765 (n=200)
-
