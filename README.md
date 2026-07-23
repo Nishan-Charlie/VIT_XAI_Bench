@@ -21,6 +21,27 @@ We leverage both **exact/causal ground truth** (synthetic & intervention-based, 
 
 ---
 
+## ✨ Visuals
+
+Here are some sample results from the benchmark:
+
+<p align="center">
+  <img src="figures/bench/arch_method_comparison.png" width="800">
+  <em>Figure 1: Comparison of attribution methods across different architectures.</em>
+</p>
+
+<p align="center">
+  <img src="figures/bench/bench_pareto.png" width="800">
+  <em>Figure 2: Pareto frontier of attribution methods, trading off fidelity and complexity.</em>
+</p>
+
+<p align="center">
+  <img src="figures/bench/qualitative_gallery.png" width="800">
+  <em>Figure 3: Qualitative comparison of different XAI methods.</em>
+</p>
+
+---
+
 ## 🎯 Key Research Questions Evaluated
 
 - **RQ1 — Transfer:** Do attribution-method fidelity rankings established on CNNs hold on ViT foundation models?
@@ -72,33 +93,39 @@ We leverage both **exact/causal ground truth** (synthetic & intervention-based, 
 
 ## 💻 Quickstart
 
-### Running the Explanability Pipeline
+### Running a Benchmark
 
-Use our provided script to download ImageNet-S samples, run inference using a Vision Transformer (default `ViT-S/16`), and extract multiple explainability heatmaps out-of-the-box.
+The easiest way to run a benchmark is to use the `xai-bench` command-line tool with a configuration file.
+
+1. **Choose a configuration file** from the `configs/` directory. For example, `configs/smoke_test_quantus.yaml`.
+
+2. **Run the benchmark:**
+   ```bash
+   xai-bench --config configs/smoke_test_quantus.yaml
+   ```
+
+This will run the benchmark with the specified models, methods, and metrics, and save the results in the `results/` directory.
+
+### Running a single explanation
+
+To run a single explanation on an image, you can use the `run_imagenets_xai.py` script, which has been moved to the `scripts/` directory.
 
 ```bash
-python run_imagenets_xai.py
+python scripts/run_imagenets_xai.py
 ```
-
-**What this script does:**
-1. Loads validation samples.
-2. Generates heatmaps (Grad-CAM, Integrated Gradients, Attention Rollout) in the `results/ImageNetS/` directory.
-3. Applies graph-based Louvain clustering for visualization.
-
-### Exploring Interactive Notebooks
-- `visualize_xai_methods.ipynb`: Play around with different models, apply various XAI attribution methods, and visualize the saliency maps interactively!
 
 ---
 
 ## 📂 Repository Structure
 
+The repository is structured as follows:
+
 ```
 ├── configs/            # Configs for benchmarking sweeps
-├── data/               # Download scripts and dataset structures
-├── images/             # Visualizations and figures
-├── paper/              # LaTeX source for the benchmark paper
-├── results/            # Output directories for attribution maps
-├── scripts/bench/      # Automation scripts for large-scale runs & metric eval
+├── data/               # Data loading scripts and dataset structures
+├── figures/            # Figures for the paper and README
+├── images/             # Sample images for testing
+├── scripts/            # Helper scripts for running experiments, plotting, etc.
 ├── tests/              # Unit tests
 └── xai_bench/          # Core Python framework for XAI methods & models
 ```
