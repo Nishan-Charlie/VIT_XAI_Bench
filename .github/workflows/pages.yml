@@ -1,0 +1,74 @@
+name: Deploy website
+
+# Publishes website/ to GitHub Pages. The site data is regenerated from the
+# committed results on every deploy, so the published page can never drift from
+# results/processed/records.json.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - "results/**"
+      - "xai_bench/taxonomy.py"
+      - "xai_bench/results_schema.py"
+      - "scripts/export_web_data.py"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+# Allow one concurrent deployment; don't cancel a run that is mid-publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # export_web_data.py only needs the stdlib plus xai_bench's pure-Python
+      # taxonomy/schema modules, so the full ML stack is not installed here.
+      - name: Regenerate site data from committed results
+        run: |
+          python scripts/validate_results.py
+          python scripts/export_web_data.py
+
+      - name: Fail if the exported data is empty
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          data = json.loads(Path("website/public/data/benchmark.json").read_text())
+          n = len(data.get("records", []))
+          if n == 0:
+              sys.exit("benchmark.json contains no records; refusing to publish")
+          print(f"OK: publishing {n} records")
+          PY
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: website
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

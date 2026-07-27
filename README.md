@@ -1,4 +1,17 @@
-<div align="center">
+# Does Explainability Transfer?
+
+### A Controlled Benchmark of Attribution Methods on Vision Transformers and CNNs
+
+Sathiyamohan Nishankar · Nethmi Pathirana · Pubudu Sanjeewani · Asanka Perera · Selvarajah Thuseethan
+
+[![CI](https://github.com/Nishan-Charlie/VIT_XAI_Bench/actions/workflows/ci.yml/badge.svg)](https://github.com/Nishan-Charlie/VIT_XAI_Bench/actions/workflows/ci.yml)
+[![Pages](https://github.com/Nishan-Charlie/VIT_XAI_Bench/actions/workflows/pages.yml/badge.svg)](https://github.com/Nishan-Charlie/VIT_XAI_Bench/actions/workflows/pages.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+**[Interactive results](https://nishan-charlie.github.io/VIT_XAI_Bench/)** ·
+[Reproducibility guide](docs/reproducibility.md) ·
+[Scientific integrity record](docs/scientific_integrity.md)
 
 ---
 
@@ -101,7 +114,7 @@ Each is traceable to `results/processed/records.json` and reproducible with
 | Localisation       | Pointing Game (bbox)                                 | ✅ 117 cells           |
 | Robustness         | Max-Sensitivity                                      | ✅ 117 cells           |
 | Complexity         | Sparseness (Gini)                                    | ✅ 117 cells           |
-| Computational cost | runtime, GPU memory                                  | ❌**none** — see below |
+| Computational cost | runtime, GPU memory                                  | ❌ **none** — see below |
 
 Canonical names live in [`xai_bench/taxonomy.py`](xai_bench/taxonomy.py); adding
 a backbone or method means editing that one file.
@@ -265,19 +278,41 @@ It runs in CI and needs no torch.
 
 ## Interactive website
 
-An academic project page rendered entirely from the exported JSON —
-architecture explorer, filterable result matrix, ranking explorer,
-transferability view, and an explicit panel stating which dimensions have no
-data.
+An academic project page rendered entirely from the exported JSON: architecture
+explorer, filterable result matrix, ranking explorer, transferability view, and
+an explicit panel stating which dimensions have no data.
+
+**Live:** <https://nishan-charlie.github.io/VIT_XAI_Bench/>
+
+### Run it locally
 
 ```bash
 python scripts/export_web_data.py
-python -m http.server 8000 --directory website   # http://localhost:8000
+python -m http.server 8000 --directory website
+# open http://localhost:8000
 ```
 
-The page fetches `website/public/data/benchmark.json` at load time, so
-re-exporting refreshes everything without touching frontend code. It must be
-served over HTTP — `fetch` is blocked on `file://`.
+It must be served over HTTP — browsers block `fetch` on `file://`, so opening
+`index.html` directly shows an error banner instead of the data.
+
+### Deploy to GitHub Pages
+
+Deployment is automated by `.github/workflows/pages.yml`. Enable it once:
+
+1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+   (Not "Deploy from a branch" — the workflow publishes an artifact.)
+2. Push to `main`, or run the **Deploy website** workflow manually from the
+   Actions tab.
+
+The workflow re-runs `validate_results.py` and `export_web_data.py` before
+publishing, so the live page can never drift from
+`results/processed/records.json`, and it refuses to publish an empty result set.
+It redeploys automatically whenever `website/`, `results/`, the taxonomy, the
+schema, or the export script changes.
+
+No build step, no bundler, no Node: the site is static HTML/CSS/JS that fetches
+`public/data/benchmark.json` at load time. All asset paths are relative, so it
+works at a project sub-path (`/VIT_XAI_Bench/`) without configuration.
 
 ---
 
