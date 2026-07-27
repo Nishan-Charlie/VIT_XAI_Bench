@@ -11,13 +11,15 @@ Produces (figures/):
 Same Okabe-Ito family palette as benchmark_figures.py (validated CVD-safe);
 every figure direct-labels methods, so color is never the only identity carrier.
 """
-import os
 import csv
-import numpy as np
+import os
+
 import matplotlib
+import numpy as np
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 os.makedirs("figures", exist_ok=True)
 
@@ -194,10 +196,10 @@ def fig_attnlrp_flow():
             ha="center", fontweight="bold")
     ax.plot([0.585, 0.585], [0.08, 0.97], color="#dddddd", lw=0.8, ls=":")
     fig.tight_layout(pad=0.2)
-    fig.savefig("figures/hilrp/attnlrp_flow.pdf", bbox_inches="tight")
-    fig.savefig("figures/hilrp/attnlrp_flow.png", dpi=200, bbox_inches="tight")
+    fig.savefig("figures/bench/attnlrp_flow.pdf", bbox_inches="tight")
+    fig.savefig("figures/bench/attnlrp_flow.png", dpi=200, bbox_inches="tight")
     plt.close(fig)
-    print("wrote figures/hilrp/attnlrp_flow.pdf")
+    print("wrote figures/bench/attnlrp_flow.pdf")
 
 
 # ── 3. Pointing-Game rank slopegraph across backbone families ────────────────

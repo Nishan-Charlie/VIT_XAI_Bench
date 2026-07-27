@@ -8,9 +8,9 @@ EfficientViT variants (the visual analogue of the Pointing-Game heatmap).
 
 Runs the registry Grad-CAM (per-model target layers) so it matches the benchmark.
 """
+import glob
 import os
 import sys
-import glob
 import warnings
 
 import numpy as np
@@ -53,7 +53,9 @@ def _img_path(name):
 
 def gen():
     from PIL import Image
-    from xai_bench.registry import MODELS as REG, METHODS
+
+    from xai_bench.registry import METHODS
+    from xai_bench.registry import MODELS as REG
     device = "cuda" if torch.cuda.is_available() else "cpu"
     for mk, _ in MODELS:
         mw = REG.get(mk)(); mw.model.eval().to(device)

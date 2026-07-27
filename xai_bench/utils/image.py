@@ -9,8 +9,6 @@ localization metrics rely on.
 
 from __future__ import annotations
 
-from typing import Tuple
-
 import numpy as np
 import torch
 import torchvision.transforms as T
@@ -29,7 +27,7 @@ def build_transform(input_size: int = 224) -> T.Compose:
     ])
 
 
-def load_image_tensor(path: str, input_size: int = 224) -> Tuple[Image.Image, torch.Tensor, Tuple[int, int]]:
+def load_image_tensor(path: str, input_size: int = 224) -> tuple[Image.Image, torch.Tensor, tuple[int, int]]:
     """Return (resized PIL RGB, normalized tensor [1,3,H,W], original (W,H))."""
     img = Image.open(path).convert("RGB")
     orig_wh = img.size  # (W, H)

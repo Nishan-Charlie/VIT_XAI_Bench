@@ -1,9 +1,11 @@
+import warnings
+
 import timm
 import torch
-import numpy as np
-from xai_bench.methods.hilrp.vit_lxt import attribute_vit
+
 from scripts.scaled_eval import load_cache, pointing
-import warnings
+from xai_bench.methods.vit_lrp_backend import attribute_vit
+
 warnings.filterwarnings('ignore')
 
 model = timm.create_model('vit_base_patch16_224', pretrained=True).eval()

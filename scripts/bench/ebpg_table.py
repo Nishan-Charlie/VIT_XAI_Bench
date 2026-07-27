@@ -37,4 +37,4 @@ print(f"{'method/model':22s} " + " ".join(f"{c:>10s}" for c in COLS))
 for mk, ml in [("grad_cam", "Grad-CAM"), ("grad_cam_plus_plus", "Grad-CAM++")]:
     bb = BBOX_PG[mk]
     eb = [val(m, mk, "ebpg") for m in MODEL_ORDER]
-    print(f"{ml:22s} " + " ".join(f"{b:.2f}->{e:.2f}" for b, e in zip(bb, eb)))
+    print(f"{ml:22s} " + " ".join(f"{b:.2f}->{e:.2f}" for b, e in zip(bb, eb, strict=False)))

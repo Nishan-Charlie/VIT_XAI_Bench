@@ -7,13 +7,13 @@ can add their own the same way without touching the runner.
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterator, List
+from collections.abc import Callable, Iterator
 
 
 class Registry:
     def __init__(self, kind: str):
         self.kind = kind
-        self._entries: Dict[str, Callable] = {}
+        self._entries: dict[str, Callable] = {}
 
     def register(self, name: str) -> Callable:
         def _decorator(fn: Callable) -> Callable:
@@ -42,7 +42,7 @@ class Registry:
     def __iter__(self) -> Iterator[str]:
         return iter(self._entries)
 
-    def names(self) -> List[str]:
+    def names(self) -> list[str]:
         return sorted(self._entries)
 
 

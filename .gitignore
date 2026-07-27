@@ -1,25 +1,57 @@
-# Secrets — never commit
+# ── Secrets — never commit ────────────────────────────────────────────
 .env
+.env.*
+!.env.example
+*.pem
+*.key
 
-# Python
+# ── Python ────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
-results/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# ── Datasets and model weights (fetched, never committed) ─────────────
 data/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# ── Benchmark run outputs ─────────────────────────────────────────────
+# results/raw and results/processed ARE tracked: they are the published
+# result set the figures and website are built from. Everything else a run
+# writes (per-image rows, saliency dumps, scratch runs) is not.
+results/*
+!results/raw/
+!results/processed/
+!results/README.md
+results/raw/*
+!results/raw/benchmark_runs.csv
+results/**/results.json
+results/**/results.csv
+
+# ── Working files ─────────────────────────────────────────────────────
 scratch/
 archive/
-*.csv
-*.pdf
-*.pt
-*.bat
-.pytest_cache/
-xai_bench.egg-info/
-*.ipynb
-
-checkpoints/
 out.txt
+*.ipynb_checkpoints
+.DS_Store
+Thumbs.db
 
+# ── Editor / agent notes ──────────────────────────────────────────────
 AGENTS.md
 CLAUDE.md
 NOTES_next.md
 RESEARCH_PLAN.md
+.claude/

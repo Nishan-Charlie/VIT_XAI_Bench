@@ -1,0 +1,188 @@
+{
+  "schema_version": "1.0.0",
+  "n_records": 117,
+  "n_models": 10,
+  "n_methods": 14,
+  "build_report": {
+    "rows_read": 527,
+    "dropped_excluded_run": 400,
+    "dropped_no_identity": 0,
+    "dropped_unknown_model": {},
+    "dropped_unknown_method": {},
+    "dropped_no_metrics": 0
+  },
+  "metric_coverage": {
+    "faithfulness_correlation": 117,
+    "faithfulness_estimate": 117,
+    "apf": 28,
+    "pointing_game": 117,
+    "max_sensitivity": 117,
+    "sparseness": 117
+  },
+  "dimensions": {
+    "faithfulness": {
+      "metrics": [
+        "faithfulness_correlation",
+        "faithfulness_estimate",
+        "apf"
+      ],
+      "records_with_data": 262,
+      "status": "measured"
+    },
+    "localization": {
+      "metrics": [
+        "pointing_game"
+      ],
+      "records_with_data": 117,
+      "status": "measured"
+    },
+    "robustness": {
+      "metrics": [
+        "max_sensitivity"
+      ],
+      "records_with_data": 117,
+      "status": "measured"
+    },
+    "complexity": {
+      "metrics": [
+        "sparseness"
+      ],
+      "records_with_data": 117,
+      "status": "measured"
+    },
+    "computational_cost": {
+      "metrics": [],
+      "records_with_data": 0,
+      "status": "not_available"
+    }
+  },
+  "missing_cells": [
+    {
+      "model": "resnet50",
+      "method": "attention_rollout",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "resnet50",
+      "method": "attention_gradient",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "resnet50",
+      "method": "attnlrp",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
+      "method": "attention_rollout",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "convnext_base",
+      "method": "attention_gradient",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "convnext_base",
+      "method": "attnlrp",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "attnlrp",
+      "reason": "not_run"
+    },
+    {
+      "model": "swin_base_patch4_window7_224",
+      "method": "attention_rollout",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "swin_base_patch4_window7_224",
+      "method": "attention_gradient",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "pvt_v2_b2",
+      "method": "attention_rollout",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "pvt_v2_b2",
+      "method": "attention_gradient",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "maxvit_small_tf_224",
+      "method": "gradient_shap",
+      "reason": "not_run"
+    },
+    {
+      "model": "maxvit_small_tf_224",
+      "method": "attention_rollout",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "maxvit_small_tf_224",
+      "method": "attention_gradient",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "mobilevitv2_100",
+      "method": "gradient_shap",
+      "reason": "not_run"
+    },
+    {
+      "model": "mobilevitv2_100",
+      "method": "attention_rollout",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "mobilevitv2_100",
+      "method": "attention_gradient",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "efficientvit_b1",
+      "method": "gradient_shap",
+      "reason": "not_run"
+    },
+    {
+      "model": "efficientvit_b1",
+      "method": "attention_rollout",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "efficientvit_b1",
+      "method": "attention_gradient",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "efficientvit_b2",
+      "method": "gradient_shap",
+      "reason": "not_run"
+    },
+    {
+      "model": "efficientvit_b2",
+      "method": "attention_rollout",
+      "reason": "not_applicable"
+    },
+    {
+      "model": "efficientvit_b2",
+      "method": "attention_gradient",
+      "reason": "not_applicable"
+    }
+  ],
+  "provenance_gaps": {
+    "config_file": 117,
+    "git_commit": 117,
+    "seed": 117,
+    "dataset": 117,
+    "timestamp": 117,
+    "python_version": 117,
+    "torch_version": 117,
+    "cuda_version": 117,
+    "gpu_name": 117
+  },
+  "validation_problems": []
+}

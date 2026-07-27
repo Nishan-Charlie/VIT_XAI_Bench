@@ -6,9 +6,10 @@ layer). Emits mean/median/std/max and the fraction of undefined (degenerate)
 maps per method, plus LaTeX rows. This is the empirical backing for Section 8.2:
 Grad-CAM++ instability is heavy-tailed and confined to global-attention backbones.
 """
-import json
-import numpy as np
 import collections
+import json
+
+import numpy as np
 
 MN = {"resnet50": "RN-50", "vit_base_patch16_224": "ViT-B/16",
       "swin_base_patch4_window7_224": "Swin-B", "pvt_v2_b2": "PVT-v2",

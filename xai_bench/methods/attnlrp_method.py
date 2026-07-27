@@ -1,6 +1,6 @@
 """AttnLRP baseline method registered in the bench registry.
 
-Two paths, matching the lineage experiments (scripts/lineage_naive_legs.py):
+Two paths:
 
 FLAT ViT (vit_*, deit_*, beit_*): the true published recipe. LXT efficient
 backend with ATTN_MODE='attnlrp':
@@ -13,14 +13,14 @@ generic recipe, i.e. what a user gets today applying LXT's flat-transformer
 recipe to an unsupported architecture: nn.GELU and nn.LayerNorm identity
 patches plus zennit Gamma composites, and NOTHING architecture-specific.
 Deliberately generous: it also gets the BN-merge canonizer and correct
-preprocessing (generic zennit/bench hygiene). It does NOT get the HiLRP
-contribution set (window/separable/linear attention rules, the norm-subclass
-guard, activation identities beyond GELU). Same protocol as the n=1000
-lineage/conservation runs.
+preprocessing (generic zennit/bench hygiene). It gets NO architecture-specific
+relevance rules, which is precisely the point: it measures what a practitioner
+obtains today by applying the flat-transformer recipe to an unsupported
+architecture.
 
-This is the BASELINE from Achtibat et al. (2024), NOT HiLRP.
+This is the published BASELINE from Achtibat et al. (2024).
 
-DEDICATED-RUN NOTE: Like hilrp, both paths apply class-level forward patches.
+DEDICATED-RUN NOTE: both paths apply class-level forward patches.
 Do not mix with gradient-based baselines in the same process. Also do not mix
 the flat-ViT path and the naive path in ONE process: attribute_vit patches the
 timm norm subclasses, which would silently un-naive the hierarchical baseline.
@@ -46,7 +46,7 @@ def _naive_patch_once():
     global _NAIVE_PATCHED
     if _NAIVE_PATCHED:
         return
-    from lxt.efficient.patches import patch_method, non_linear_forward, layer_norm_forward
+    from lxt.efficient.patches import layer_norm_forward, non_linear_forward, patch_method
     from lxt.efficient.zennit_patches import monkey_patch_zennit
 
     patch_method(non_linear_forward, nn.GELU, keep_original=True)
@@ -105,7 +105,7 @@ def get_attnlrp(model_wrapper, model=None, gamma: float = 0.25, **kwargs):
     model_name = model_wrapper.model_name
 
     if _is_flat_vit(model_name):
-        from xai_bench.methods.hilrp.vit_lxt import attribute_vit
+        from xai_bench.methods.vit_lrp_backend import attribute_vit
 
         def method(inputs: torch.Tensor, target: int) -> torch.Tensor:
             x = inputs if adapter is None else adapter._adapt(inputs)

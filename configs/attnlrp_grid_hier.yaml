@@ -3,7 +3,7 @@
 # patches; ONLY attnlrp in this config. Keep vit_base in the separate
 # attnlrp_grid_vit.yaml: attribute_vit's timm-subclass patches would un-naive
 # this baseline if run in the same process.
-# Protocol identical to hilrp_grid.yaml except n=100.
+# Protocol identical to the other baseline grids except n=100.
 
 models:
   - "swin_base_patch4_window7_224"

@@ -1,6 +1,6 @@
 # AttnLRP baseline rows, flat ViT (true published recipe: LXT efficient,
 # ATTN_MODE='attnlrp'). DEDICATED RUN, separate process from attnlrp_grid_hier
-# (see attnlrp_method.py docstring). Protocol identical to hilrp_grid.yaml
+# (see attnlrp_method.py docstring). Protocol identical to the other baseline grids
 # except n=100.
 
 models:

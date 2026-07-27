@@ -1,6 +1,7 @@
 import torch
+
 # pyrefly: ignore [missing-import]
-from captum.attr import IntegratedGradients, Saliency, NoiseTunnel, InputXGradient
+from captum.attr import InputXGradient, IntegratedGradients, NoiseTunnel, Saliency
 
 from xai_bench.registry import METHODS
 

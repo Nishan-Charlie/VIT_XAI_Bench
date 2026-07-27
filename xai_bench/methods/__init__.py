@@ -1,12 +1,18 @@
-"""Attribution methods registry and wrappers.
+"""Attribution methods.
 
-This module provides standardized wrappers around various attribution methods
-(Captum, CAM, native) that conform to a common `__call__(inputs, target)` API.
+Importing this package registers every built-in method. Each conforms to the
+same ``__call__(inputs, target)`` interface regardless of backend (Captum, CAM,
+attention-native, or LRP).
+
+``attnlrp_method`` is the published AttnLRP baseline (Achtibat et al., 2024).
+It applies class-level monkey patches to timm and must be run in a dedicated
+process; see its module docstring.
 """
 
-from . import captum_methods
-from . import cam_methods
-from . import attention_rollout
-from . import perturbation_methods
-from . import hilrp_method   # NOTE: hilrp requires a DEDICATED run (class-level patches)
-from . import attnlrp_method  # AttnLRP baseline (Achtibat 2024): ATTN_MODE='attnlrp', flat ViTs only
+from . import (  # noqa: F401  (imported for registration)
+    attention_rollout,
+    attnlrp_method,
+    cam_methods,
+    captum_methods,
+    perturbation_methods,
+)

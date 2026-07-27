@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, please cite the paper below."
+title: "Does Explainability Transfer? A Controlled Benchmark of Attribution Methods on Vision Transformers and CNNs"
+authors:
+  - family-names: Nishankar
+    given-names: Sathiyamohan
+  - family-names: Pathirana
+    given-names: Nethmi
+  - family-names: Sanjeewani
+    given-names: Pubudu
+  - family-names: Perera
+    given-names: Asanka
+  - family-names: Thuseethan
+    given-names: Selvarajah
+repository-code: "https://github.com/Nishan-Charlie/VIT_XAI_Bench"
+license: MIT
+type: software

@@ -19,8 +19,8 @@ Heads
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Callable, List, Optional
+from collections.abc import Callable
+from dataclasses import dataclass
 
 import torch
 import torch.nn as nn
@@ -59,13 +59,13 @@ class WrappedModel(nn.Module):
     def num_params_m(self) -> float:
         return sum(p.numel() for p in self.module.parameters()) / 1e6
 
-    def target_layers(self) -> List[nn.Module]:
+    def target_layers(self) -> list[nn.Module]:
         if self.spec.target_layer is None:
             raise ValueError(f"{self.spec.name}: no target_layer defined for Grad-CAM")
         layer = self.spec.target_layer(self.module)
         return layer if isinstance(layer, list) else [layer]
 
-    def reshape_transform(self) -> Optional[Callable]:
+    def reshape_transform(self) -> Callable | None:
         """Return a fn mapping a hooked activation -> [B, C, h, w], or None."""
         s = self.spec
         if s.reshape == "none":

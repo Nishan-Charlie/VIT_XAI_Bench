@@ -1,4 +1,4 @@
-# Baseline rows for the PVT v2 leg (third HiLRP corollary: spatial-reduction
+# Baseline rows for the PVT v2 leg (spatial-reduction
 # attention). PVT was not in the original suites, so these rows complete the
 # Gate 3 comparison table. Protocol identical to vit_suite_10 / rerun_mobilevitv2
 # (same methods, metrics, metric_kwargs, 50 cached images). pvt_v2_b2 expects

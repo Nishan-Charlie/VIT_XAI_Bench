@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import torch
 
@@ -17,24 +17,29 @@ import torch
 @dataclass
 class RunConfig:
     # What to sweep
-    models: List[str] = field(default_factory=list)
-    methods: List[str] = field(default_factory=list)
-    metrics: List[str] = field(default_factory=list)
+    models: list[str] = field(default_factory=list)
+    methods: list[str] = field(default_factory=list)
+    metrics: list[str] = field(default_factory=list)
     # Per-metric keyword overrides, e.g. {"max_sensitivity": {"nr_samples": 5}}.
     # Keeps Quantus metric cost feasible without editing the wrappers.
-    metric_kwargs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    metric_kwargs: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     # Dataset
     dataset: str = "demo"
-    dataset_kwargs: Dict[str, Any] = field(default_factory=dict)
-    num_images: Optional[int] = None      # None = all available
-    seeds: List[int] = field(default_factory=lambda: [0])
+    dataset_kwargs: dict[str, Any] = field(default_factory=dict)
+    num_images: int | None = None      # None = all available
+    seeds: list[int] = field(default_factory=lambda: [0])
 
     # Execution
     device: str = "auto"                  # "auto" | "cuda" | "cpu"
+    # Force deterministic cuDNN kernels. Slower, but bit-reproducible; see
+    # docs/reproducibility.md for the accuracy/speed tradeoff.
+    deterministic: bool = False
+    # Path of the YAML this config came from, recorded for provenance.
+    config_path: str | None = None
     input_size: int = 224
     output_dir: str = "results"
-    run_name: Optional[str] = None        # defaults to a timestamp
+    run_name: str | None = None        # defaults to a timestamp
     save_saliency: bool = False           # dump raw saliency arrays (large)
     limit_methods_to_supported: bool = True  # skip e.g. rollout on CNNs silently
 
@@ -44,7 +49,7 @@ class RunConfig:
         return self.device
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "RunConfig":
+    def from_dict(cls, d: dict[str, Any]) -> RunConfig:
         known = {f.name for f in dataclasses.fields(cls)}
         unknown = set(d) - known
         if unknown:
@@ -52,11 +57,11 @@ class RunConfig:
         return cls(**d)
 
     @classmethod
-    def from_yaml(cls, path: str) -> "RunConfig":
+    def from_yaml(cls, path: str) -> RunConfig:
         import yaml
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
         return cls.from_dict(data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)

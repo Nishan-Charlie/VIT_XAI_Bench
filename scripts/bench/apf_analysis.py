@@ -10,6 +10,7 @@ CNN backbones), and reports whether APF shrinks the per-image noise band.
 Emits a plain-text table plus LaTeX rows for the paper. No new model inference.
 """
 import json
+
 import numpy as np
 from scipy.stats import wilcoxon
 

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Does Explainability Transfer? A Controlled Benchmark of Attribution Methods on Vision Transformers and CNNs</title>
+<meta name="description" content="A controlled benchmark of attribution methods across CNNs, isotropic ViTs, hierarchical, hybrid and linear-attention transformers: faithfulness, localisation, robustness and complexity.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🔍</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<main id="main">
+
+  <!-- ════════════════════════════ hero ═══════════════════════════ -->
+  <section class="hero">
+    <div class="container">
+      <h1 class="publication-title">
+        Does Explainability Transfer?
+      </h1>
+      <p class="publication-subtitle">
+        A Controlled Benchmark of Attribution Methods on
+        Vision Transformers and CNNs
+      </p>
+
+      <p class="authors">
+        Sathiyamohan&nbsp;Nishankar,
+        Nethmi&nbsp;Pathirana,
+        Pubudu&nbsp;Sanjeewani,
+        Asanka&nbsp;Perera,
+        Selvarajah&nbsp;Thuseethan
+      </p>
+      <!-- TODO(authors): add institutions and superscript markers here, e.g.
+           <p class="affiliations"><sup>1</sup>Institution A  <sup>2</sup>Institution B</p>
+           Left blank deliberately rather than guessed. -->
+      <p class="affiliations affiliation-todo">Affiliations to be added by the authors</p>
+
+      <ul class="link-buttons">
+        <li><a href="https://github.com/Nishan-Charlie/VIT_XAI_Bench"><span class="icon">&#9881;</span>Code</a></li>
+        <li><a href="#results"><span class="icon">&#9636;</span>Results</a></li>
+        <li><a href="#reproduce"><span class="icon">&#8635;</span>Reproducibility</a></li>
+        <li><a href="public/data/benchmark.json"><span class="icon">&#8681;</span>Raw data</a></li>
+        <li><a href="#bibtex"><span class="icon">&#8220;</span>BibTeX</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ teaser ══════════════════════════ -->
+  <section class="teaser">
+    <div class="container">
+      <figure>
+        <div class="teaser-frame">
+          <div class="teaser-head">
+            <span class="teaser-metric">Ranked by <span id="ribbon-metric-name">&mdash;</span></span>
+            <span class="teaser-verdict" id="ribbon-verdict"></span>
+          </div>
+          <div class="ribbon-holder">
+            <svg id="ribbon" role="img" aria-labelledby="ribbon-title"></svg>
+            <p id="ribbon-title" class="visually-hidden">
+              Slope chart connecting each attribution method's rank on CNN backbones
+              to its rank on transformer backbones.
+            </p>
+          </div>
+          <table class="data-table visually-hidden" id="ribbon-table"></table>
+          <button class="link-button" type="button" data-reveal="ribbon-table">Show as table</button>
+        </div>
+        <figcaption>
+          <b>Attribution-method rankings do not survive the change of architecture.</b>
+          Each line connects a method's rank computed on CNN backbones (left) to its rank
+          computed on transformer backbones (right). A flat line means the ranking transfers.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ abstract ═════════════════════════ -->
+  <section class="section alt">
+    <div class="container narrow">
+      <h2 class="section-title">Abstract</h2>
+      <div class="abstract has-text-justified">
+        <p>
+          Most evidence on the effectiveness of explainable artificial intelligence (XAI)
+          attribution methods has been established on convolutional neural networks (CNNs),
+          with limited investigation into whether these conclusions generalise to the diverse
+          Vision Transformer (ViT) architectures that now dominate computer vision. This paper
+          presents a controlled benchmark that evaluates attribution quality across five
+          dimensions: faithfulness, localisation, robustness, complexity, and computational
+          cost. A standardised framework assesses attribution methods from four algorithmic
+          families on representative backbones spanning CNNs, isotropic ViTs, hierarchical
+          transformers, hybrid architectures, and linear-attention transformers.
+        </p>
+        <p>
+          The results show that attribution performance is strongly architecture-dependent and
+          that rankings established on CNNs do not reliably transfer to transformer-based
+          models. CAM-based methods achieve the highest scores under the conventional
+          bounding-box localisation metric on CNNs and most ViTs but perform poorly on
+          linear-attention architectures. Pixel-level dense-mask evaluation further reveals
+          that these gains largely reflect metric saturation rather than accurate localisation.
+          CAM-based methods also exhibit limited robustness on global-attention transformers,
+          whereas attention rollout provides consistently stable explanations with poor
+          localisation. Furthermore, faithfulness correlation offers limited discrimination
+          between attribution methods, highlighting the limitations of single-metric
+          evaluation. These findings challenge prevailing conclusions on attribution
+          performance and demonstrate the need for architecture-aware, multi-dimensional
+          evaluation.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════ scope stats ═══════════════════════ -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title">Benchmark scope</h2>
+      <p class="section-intro">
+        Figures below are computed from the published result records in this
+        repository, not entered by hand.
+      </p>
+      <div class="readout-grid" id="scope-readout"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ research question ═══════════════════ -->
+  <section class="section alt">
+    <div class="container narrow">
+      <h2 class="section-title">The research question</h2>
+      <p class="lede">
+        Are attribution methods that perform well on CNNs equally reliable on
+        modern transformer architectures?
+      </p>
+      <p class="has-text-justified">
+        Benchmarks routinely establish a ranking of attribution methods on a convolutional
+        backbone and then apply the winner elsewhere. That inference only holds if the ranking
+        is a property of the method rather than of the architecture it was measured on. This
+        benchmark holds the dataset, the metrics and the evaluation protocol fixed, varies the
+        backbone across five architecture families, and reads off whether the order survives.
+      </p>
+      <p class="note" id="question-note"></p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ transferability ════════════════════ -->
+  <section id="results" class="section">
+    <div class="container">
+      <h2 class="section-title">Transferability</h2>
+      <p class="section-intro">
+        Each method's rank computed on CNNs only, against its rank computed on
+        transformer backbones only.
+      </p>
+      <div class="controls" role="group" aria-label="Transfer controls">
+        <label class="control">
+          <span class="control-label">Metric</span>
+          <select id="transfer-metric" class="select"></select>
+        </label>
+      </div>
+      <div id="transfer-panel" class="transfer-panel"></div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════ result matrix ════════════════════ -->
+  <section id="matrix" class="section alt">
+    <div class="container">
+      <h2 class="section-title">Result matrix</h2>
+      <p class="section-intro">
+        Every measured cell of the benchmark. Rows are attribution methods,
+        columns are backbones grouped by architecture family. Hover a cell for
+        its standard deviation, sample count and source run.
+      </p>
+      <div class="controls" role="group" aria-label="Matrix filters">
+        <label class="control">
+          <span class="control-label">Metric</span>
+          <select id="matrix-metric" class="select"></select>
+        </label>
+        <label class="control">
+          <span class="control-label">Architecture family</span>
+          <select id="matrix-family" class="select"></select>
+        </label>
+        <label class="control">
+          <span class="control-label">Method family</span>
+          <select id="matrix-method-family" class="select"></select>
+        </label>
+        <label class="control">
+          <span class="control-label">Sort methods by</span>
+          <select id="matrix-sort" class="select">
+            <option value="score">Mean score</option>
+            <option value="name">Name</option>
+            <option value="family">Method family</option>
+          </select>
+        </label>
+      </div>
+      <p class="metric-note" id="matrix-metric-note"></p>
+      <div class="matrix-holder"><div id="matrix-grid"></div></div>
+      <div class="legend" id="matrix-legend"></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ ranking explorer ═══════════════════ -->
+  <section id="rankings" class="section">
+    <div class="container">
+      <h2 class="section-title">Ranking explorer</h2>
+      <p class="section-intro">
+        Method ranking within a chosen scope. Switching the scope rearranges the
+        order &mdash; that instability is the result.
+      </p>
+      <div class="controls" role="group" aria-label="Ranking controls">
+        <label class="control">
+          <span class="control-label">Metric</span>
+          <select id="rank-metric" class="select"></select>
+        </label>
+        <label class="control">
+          <span class="control-label">Scope</span>
+          <select id="rank-scope" class="select"></select>
+        </label>
+      </div>
+      <div id="ranking-list" class="ranking-list"></div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════ architecture explorer ═════════════════ -->
+  <section id="architectures" class="section alt">
+    <div class="container">
+      <h2 class="section-title">Architecture explorer</h2>
+      <p class="section-intro">
+        Select a backbone to see how each attribution method performs on it, and
+        how that differs from the method's benchmark-wide mean.
+      </p>
+      <div class="arch-layout">
+        <nav class="arch-nav" id="arch-nav" aria-label="Backbones"></nav>
+        <div class="arch-detail" id="arch-detail"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ coverage / honesty ══════════════════ -->
+  <section id="coverage" class="section">
+    <div class="container">
+      <h2 class="section-title">What is measured</h2>
+      <p class="section-intro">
+        The benchmark reports five evaluation dimensions. This panel states which
+        of them the published results actually contain, and which they do not.
+      </p>
+      <div class="dimension-grid" id="dimension-grid"></div>
+      <div class="coverage-note">
+        <h3>Provenance</h3>
+        <p id="provenance-note" class="note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ reproducibility ═════════════════════ -->
+  <section id="reproduce" class="section alt">
+    <div class="container narrow">
+      <h2 class="section-title">Reproducing these results</h2>
+      <p class="section-intro">
+        Every number on this page is generated from the repository, not typed
+        into it.
+      </p>
+      <pre><code>git clone https://github.com/Nishan-Charlie/VIT_XAI_Bench
+cd VIT_XAI_Bench
+pip install -e ".[dev]"
+
+python scripts/smoke_test.py            # verify the install, ~30 s on CPU
+python scripts/build_results.py         # raw runs  -> canonical records
+python scripts/validate_results.py      # schema + range + duplicate checks
+python scripts/export_web_data.py       # records   -> this website</code></pre>
+      <p class="note" style="margin-top:1rem">
+        The page reads <code>website/public/data/benchmark.json</code> at load time,
+        so re-running the export refreshes every table and ranking here without
+        touching the frontend.
+      </p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════ bibtex ════════════════════════ -->
+  <section id="bibtex" class="section">
+    <div class="container narrow">
+      <h2 class="section-title">BibTeX</h2>
+      <pre><code>@article{nishankar_does_explainability_transfer,
+  title   = {Does Explainability Transfer? A Controlled Benchmark of
+             Attribution Methods on Vision Transformers and CNNs},
+  author  = {Nishankar, Sathiyamohan and Pathirana, Nethmi and
+             Sanjeewani, Pubudu and Perera, Asanka and
+             Thuseethan, Selvarajah},
+  year    = {2026}
+}</code></pre>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <p id="footer-meta" class="mono"></p>
+    <p>
+      Source code released under the MIT License.
+      Page layout follows the
+      <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> project-page convention.
+    </p>
+  </div>
+</footer>
+
+<div id="tooltip" class="tooltip" role="status" aria-live="polite"></div>
+<noscript>
+  <div class="container"><p class="note">This page renders the benchmark from JSON and
+  needs JavaScript. The same data is in <code>results/processed/records.json</code>.</p></div>
+</noscript>
+
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -10,13 +10,15 @@ Colorblind-safe palettes: RdBu (diverging), YlOrRd+LogNorm (sequential), Okabe-I
 AttnLRP rows come from the dedicated attnlrp_grid_hier / attnlrp_grid_vit runs (n=100,
 appended to the CSV); cost per method is from tab:cost. \\nd cells are drawn as hatched gray.
 """
-import os
 import csv
-import numpy as np
+import os
+
 import matplotlib
+import numpy as np
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.colors import TwoSlopeNorm, LogNorm
+from matplotlib.colors import LogNorm, TwoSlopeNorm
 
 os.makedirs("figures", exist_ok=True)
 PRIOR = 0.61  # random-point Pointing prior on this eval set

@@ -1,12 +1,11 @@
 """One image (images/cat.jpg), every model x every method: the full qualitative
 grid. Rows = 8 benchmark backbones, columns = input + 14 attribution methods.
 
-Run in FOUR separate compute processes (class-level patches from hilrp/attnlrp
+Run in separate compute processes (class-level patches from attnlrp
 would alter the baselines' gradients in-process; the flat-ViT AttnLRP path and
 the naive hierarchical path must also not share a process), then assemble:
 
   python scripts/bench/qualitative_grid_cat.py baselines
-  python scripts/bench/qualitative_grid_cat.py hilrp
   python scripts/bench/qualitative_grid_cat.py attnlrp_hier
   python scripts/bench/qualitative_grid_cat.py attnlrp_vit
   python scripts/bench/qualitative_grid_cat.py assemble
@@ -80,8 +79,8 @@ def _map2d(m):
 
 
 def get_wrapper(name):
-    from xai_bench.registry import MODELS as REG
     from xai_bench.models.timm_models import create_timm_model
+    from xai_bench.registry import MODELS as REG
     try:
         return REG.get(name)()
     except Exception:
@@ -116,6 +115,7 @@ def run_baselines(only=None):
     batches of RISE/LIME on the 8GB card poisons the allocator for everything
     after it, so isolation + a CPU retry keeps every cell recoverable."""
     import gc
+
     from xai_bench.registry import METHODS
     device = "cuda" if torch.cuda.is_available() else "cpu"
     x_cpu = preprocess_imagenet()
@@ -176,24 +176,11 @@ def _targets():
         return json.load(f)
 
 
-def run_hilrp():
-    import timm
-    from xai_bench.methods.hilrp_method import _dispatch
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    targets = _targets()
-    for name in [m for m in MODELS if m != "resnet50"]:
-        model = timm.create_model(name, pretrained=True).eval().to(device)
-        x = preprocess_native(model).unsqueeze(0).to(device)
-        res = _dispatch(name)(model, x, target=targets[name], gamma=0.25)
-        np.save(os.path.join(TMP, f"{name}__hilrp.npy"), res["pixel_map"].numpy())
-        del model
-        torch.cuda.empty_cache()
-        print(f"hilrp {name}: done", flush=True)
-
 
 def run_attnlrp_hier():
     import timm
-    from xai_bench.methods.attnlrp_method import _naive_patch_once, _attribute_naive
+
+    from xai_bench.methods.attnlrp_method import _attribute_naive, _naive_patch_once
     _naive_patch_once()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     targets = _targets()
@@ -209,7 +196,8 @@ def run_attnlrp_hier():
 
 def run_attnlrp_vit():
     import timm
-    from xai_bench.methods.hilrp.vit_lxt import attribute_vit
+
+    from xai_bench.methods.vit_lrp_backend import attribute_vit
     device = "cuda" if torch.cuda.is_available() else "cpu"
     targets = _targets()
     name = "vit_base_patch16_224"
@@ -231,7 +219,7 @@ def _heat(mp):
 
 
 def assemble():
-    """Benchmark version: no HiLRP column. Failure instances are explicit:
+    """Benchmark qualitative grid. Failure instances are explicit:
     attempted-but-failed cells (Captum LRP on every transformer) are rendered
     as 'does not run', and the documented localization collapses (Grad-CAM /
     Grad-CAM++ on linear attention, rollout on ViT) get a red border."""
@@ -308,5 +296,5 @@ if __name__ == "__main__":
     if mode == "baselines":
         run_baselines(sys.argv[2] if len(sys.argv) > 2 else None)
     else:
-        {"hilrp": run_hilrp, "attnlrp_hier": run_attnlrp_hier,
+        {"attnlrp_hier": run_attnlrp_hier,
          "attnlrp_vit": run_attnlrp_vit, "assemble": assemble}[mode]()

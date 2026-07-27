@@ -8,16 +8,17 @@ bilinear map actually used. The block edges coincide with the 7x7 cell boundarie
 for both methods. Saves a vector PDF + PNG for the paper.
 """
 import warnings
+
 warnings.filterwarnings("ignore")
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn.functional as F
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 
-import xai_bench.methods, xai_bench.metrics, xai_bench.models, xai_bench.datasets  # noqa: F401
-from xai_bench.registry import MODELS, DATASETS
+import xai_bench.datasets
+import xai_bench.methods  # noqa: F401
 from xai_bench.methods.cam_methods import _to_nchw
+from xai_bench.registry import DATASETS, MODELS
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MEAN = np.array([0.485, 0.456, 0.406]); STD = np.array([0.229, 0.224, 0.225])

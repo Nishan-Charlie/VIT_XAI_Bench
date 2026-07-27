@@ -10,9 +10,11 @@ Usage:  python cache_imagenets.py --num 100 --split validation
 """
 import argparse
 import os
-import time
 import ssl
+import time
+
 import certifi
+
 
 def _custom_create_default_context(*args, **kwargs):
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)

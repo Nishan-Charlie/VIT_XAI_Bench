@@ -1,9 +1,14 @@
-"""Metrics for evaluating attribution method faithfulness, localization, and sparseness.
+"""Evaluation metrics.
+
+Importing this package registers every built-in metric across the benchmark's
+dimensions: faithfulness, localisation, robustness and complexity.
 """
 
-from . import localization
-from . import faithfulness
-from . import sparseness
-from . import robustness
-from . import randomisation
-from . import axiomatic
+from . import (  # noqa: F401  (imported for registration)
+    axiomatic,
+    faithfulness,
+    localization,
+    randomisation,
+    robustness,
+    sparseness,
+)

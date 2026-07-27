@@ -1,9 +1,11 @@
+import warnings
+
 import timm
 import torch
-import numpy as np
-from xai_bench.methods.hilrp.vit_lxt import attribute_vit
+
 from scripts.scaled_eval import load_cache, pointing
-import warnings
+from xai_bench.methods.vit_lrp_backend import attribute_vit
+
 warnings.filterwarnings('ignore')
 
 model = timm.create_model('vit_base_patch16_224', pretrained=True).eval()
@@ -28,7 +30,7 @@ for g in gammas:
         img = ((img * IS + IM).clamp(0, 1) - m) / s
         res = attribute_vit(model, img, gamma=g, attn_mode='cp')
         hits += pointing(res['pixel_map'].numpy(), data[i]['metadata']['bboxes'])
-    
+
     score = hits / n
     print(f"Gamma={g:.2f} -> Score: {score:.3f}")
     if score > best_score:

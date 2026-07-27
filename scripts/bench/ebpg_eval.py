@@ -10,15 +10,18 @@ pools only the class token, so we read from the last block's input norm (as in t
 reproduction). Gradient methods come from the registry. n=1000, single seed.
 """
 import warnings
+
 warnings.filterwarnings("ignore")
 import json
+
 import numpy as np
 import torch
 import torch.nn.functional as F
 
-import xai_bench.methods, xai_bench.metrics, xai_bench.models, xai_bench.datasets  # noqa: F401
-from xai_bench.registry import MODELS, METHODS
+import xai_bench.datasets
+import xai_bench.methods  # noqa: F401
 from xai_bench.methods.cam_methods import _to_nchw
+from xai_bench.registry import METHODS, MODELS
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 N = 1000

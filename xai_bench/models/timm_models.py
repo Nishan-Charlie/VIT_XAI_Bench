@@ -1,7 +1,7 @@
+
+import timm
 import torch
 import torch.nn as nn
-import timm
-from typing import Dict, Optional, Tuple
 
 from xai_bench.registry import MODELS
 
@@ -54,12 +54,12 @@ class InputStatsAdapter(nn.Module):
             return getattr(super().__getattr__("model"), name)
 
 
-def _needs_stats_adapter(model: nn.Module) -> Optional[Tuple[tuple, tuple]]:
+def _needs_stats_adapter(model: nn.Module) -> tuple[tuple, tuple] | None:
     cfg = getattr(model, "pretrained_cfg", None) or getattr(model, "default_cfg", {})
     mean = tuple(cfg.get("mean", _BENCH_MEAN))
     std = tuple(cfg.get("std", _BENCH_STD))
-    if all(abs(a - b) < 1e-6 for a, b in zip(mean, _BENCH_MEAN)) and \
-       all(abs(a - b) < 1e-6 for a, b in zip(std, _BENCH_STD)):
+    if all(abs(a - b) < 1e-6 for a, b in zip(mean, _BENCH_MEAN, strict=False)) and \
+       all(abs(a - b) < 1e-6 for a, b in zip(std, _BENCH_STD, strict=False)):
         return None
     return mean, std
 
@@ -107,7 +107,7 @@ class ModelWrapper(nn.Module):
         timm backbone in this suite implements."""
         return hasattr(self.model, "forward_features") and hasattr(self.model, "forward_head")
 
-    def get_target_layer(self) -> Optional[nn.Module]:
+    def get_target_layer(self) -> nn.Module | None:
         """Legacy single-layer accessor (kept for any Captum LayerGradCam path).
         The generic Grad-CAM no longer needs it."""
         if self.is_vit:
@@ -122,11 +122,11 @@ class ModelWrapper(nn.Module):
             return self.model.stages[-1]
         return None
 
-    def get_attention_maps(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
+    def get_attention_maps(self, x: torch.Tensor) -> tuple[torch.Tensor, ...]:
         raise NotImplementedError("Attention maps retrieval requires specific hooks.")
 
 
-def _infer_arch(name: str) -> Tuple[str, bool]:
+def _infer_arch(name: str) -> tuple[str, bool]:
     """Fallback (cam_format, supports_attention) inferred from a timm model name."""
     n = name.lower()
     if any(k in n for k in ("maxvit", "mobilevit", "efficientvit", "levit")):
@@ -143,9 +143,9 @@ def _infer_arch(name: str) -> Tuple[str, bool]:
 def create_timm_model(
     model_name: str,
     pretrained: bool = True,
-    timm_name: Optional[str] = None,
-    cam_format: Optional[str] = None,
-    supports_attention: Optional[bool] = None,
+    timm_name: str | None = None,
+    cam_format: str | None = None,
+    supports_attention: bool | None = None,
     **kwargs,
 ) -> ModelWrapper:
     name = timm_name or model_name
@@ -190,7 +190,7 @@ def convnext_base(**kwargs):
 # attention, so attention-native methods do not apply (supports_attention=False).
 # Grad-CAM works via the generic forward_features path using the cam_format below.
 # All build at 224x224 with a public ImageNet-1k head. Value = (timm tag, cam_format).
-EFFICIENT_VIT_SUITE: Dict[str, Tuple[str, str]] = {
+EFFICIENT_VIT_SUITE: dict[str, tuple[str, str]] = {
     # Swin -- shifted-window attention, channels-last feature map
     "swin_tiny_patch4_window7_224":  ("swin_tiny_patch4_window7_224",  "nhwc"),
     "swin_small_patch4_window7_224": ("swin_small_patch4_window7_224", "nhwc"),
@@ -205,7 +205,7 @@ EFFICIENT_VIT_SUITE: Dict[str, Tuple[str, str]] = {
     # EfficientViT -- multi-scale linear attention (MIT family)
     "efficientvit_b1":               ("efficientvit_b1",               "nchw"),
     "efficientvit_b2":               ("efficientvit_b2",               "nchw"),
-    # PVT v2 -- spatial-reduction attention (HiLRP third-corollary leg)
+    # PVT v2 -- spatial-reduction attention
     "pvt_v2_b2":                     ("pvt_v2_b2",                     "nchw"),
 }
 

@@ -1,6 +1,7 @@
 import os
-from typing import Callable, Optional, Tuple, Dict, Any
 import xml.etree.ElementTree as ET
+from collections.abc import Callable
+from typing import Any
 
 import torch
 from torch.utils.data import Dataset
@@ -11,7 +12,7 @@ from xai_bench.registry import DATASETS
 
 class ImageNetBBoxDataset(Dataset):
     """A standard ImageNet validation loader that also parses bounding boxes.
-    
+
     Expected structure:
     root/
         ILSVRC2012_val_00000001.JPEG
@@ -23,15 +24,15 @@ class ImageNetBBoxDataset(Dataset):
     labels.txt
         # lines of form: ILSVRC2012_val_00000001.JPEG <class_id>
     """
-    def __init__(self, root_dir: str, bbox_dir: Optional[str] = None, 
-                 labels_file: Optional[str] = None, transform: Optional[Callable] = None):
+    def __init__(self, root_dir: str, bbox_dir: str | None = None,
+                 labels_file: str | None = None, transform: Callable | None = None):
         self.root_dir = root_dir
         self.bbox_dir = bbox_dir
         self.transform = transform
-        
+
         self.samples = []
         if labels_file and os.path.exists(labels_file):
-            with open(labels_file, 'r') as f:
+            with open(labels_file) as f:
                 for line in f:
                     parts = line.strip().split()
                     if len(parts) >= 2:
@@ -52,7 +53,7 @@ class ImageNetBBoxDataset(Dataset):
         bboxes = []
         if not os.path.exists(xml_path):
             return bboxes
-            
+
         tree = ET.parse(xml_path)
         root = tree.getroot()
         for obj in root.findall('object'):
@@ -65,21 +66,21 @@ class ImageNetBBoxDataset(Dataset):
                 bboxes.append([xmin, ymin, xmax, ymax])
         return bboxes
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int, Dict[str, Any]]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, int, dict[str, Any]]:
         img_name, label = self.samples[idx]
         img_path = os.path.join(self.root_dir, img_name)
         img = default_loader(img_path)
-        
+
         metadata = {'img_name': img_name, 'bboxes': []}
-        
+
         if self.bbox_dir:
             base_name = os.path.splitext(img_name)[0]
             xml_path = os.path.join(self.bbox_dir, f"{base_name}.xml")
             metadata['bboxes'] = self._parse_bbox(xml_path, img.width, img.height)
-            
+
         if self.transform:
             img = self.transform(img)
-            
+
         return img, label, metadata
 
 
@@ -89,7 +90,7 @@ def get_demo_dataset(**kwargs):
     root = kwargs.get('root', 'data/demo/images')
     bbox_dir = kwargs.get('bbox_dir', 'data/demo/bboxes')
     labels = kwargs.get('labels_file', 'data/demo/labels.txt')
-    
+
     # Needs transforms applied externally typically, but we can do a simple fallback
     from torchvision import transforms
     transform = transforms.Compose([
@@ -97,9 +98,9 @@ def get_demo_dataset(**kwargs):
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
-    
+
     os.makedirs(root, exist_ok=True)
     os.makedirs(bbox_dir, exist_ok=True)
-    
+
     # We will generate synthetic data in our test script later if this is empty
     return ImageNetBBoxDataset(root, bbox_dir, labels, transform=transform)

@@ -10,14 +10,17 @@ implementation; same Quantus metrics and MS protocol (nr_samples=3, lower_bound=
 as the main run, so the ViT-B row is directly comparable.
 """
 import warnings
+
 warnings.filterwarnings("ignore")
 import json
+
 import numpy as np
 import torch
 import torch.nn.functional as F
 
-import xai_bench.methods, xai_bench.metrics, xai_bench.models, xai_bench.datasets  # noqa: F401
-from xai_bench.registry import METHODS, METRICS, MODELS, DATASETS
+import xai_bench.datasets
+import xai_bench.methods  # noqa: F401
+from xai_bench.registry import DATASETS, METRICS, MODELS
 
 N_IMAGES = 100
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

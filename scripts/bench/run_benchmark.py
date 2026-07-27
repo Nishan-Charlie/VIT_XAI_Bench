@@ -1,11 +1,12 @@
 import argparse
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from xai_bench.config import RunConfig
 from xai_bench.runner import BenchmarkRunner
+
 
 def main():
     parser = argparse.ArgumentParser(description="Run XAI Benchmark")
@@ -14,7 +15,7 @@ def main():
 
     print(f"Loading config from {args.config}")
     config = RunConfig.from_yaml(args.config)
-    
+
     runner = BenchmarkRunner(config)
     runner.run()
 

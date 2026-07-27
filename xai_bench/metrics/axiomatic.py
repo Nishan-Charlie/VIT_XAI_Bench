@@ -1,25 +1,26 @@
-import torch
 import numpy as np
 import quantus
+import torch
 
 from xai_bench.registry import METRICS
 
+
 def _run_quantus_axiomatic_metric(metric_class, attr, model, image, target, kwargs, metric_kwargs=None):
     if model is None or image is None or target is None:
-        raise ValueError(f"Quantus axiomatic metric requires model, image, and target.")
-        
+        raise ValueError("Quantus axiomatic metric requires model, image, and target.")
+
     x_batch = image.unsqueeze(0).cpu().numpy()
     y_batch = np.array([target])
     a_batch = attr.unsqueeze(0).unsqueeze(0).cpu().numpy()
-    
+
     device = image.device
     model.eval()
-    
+
     explain_func = kwargs.get('explain_func', None)
-    
+
     if metric_kwargs is None:
         metric_kwargs = {}
-    
+
     metric = metric_class(disable_warnings=True, **metric_kwargs)
     try:
         if explain_func is not None:
