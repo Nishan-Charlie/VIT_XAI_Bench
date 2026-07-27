@@ -79,10 +79,5 @@ jobs:
       - run: pip install pyyaml
       - name: Validate published results against the schema
         run: python scripts/validate_results.py
-      - name: Assert no separate-paper (HiLRP) results are exposed
-        run: |
-          if grep -rniI --exclude-dir=.git --exclude-dir=node_modules 'hilrp\|hi-lrp' .; then
-            echo "::error::HiLRP belongs to a different paper and must not appear in this repository."
-            exit 1
-          fi
-          echo "OK: no HiLRP references found."
+      - name: Assert no separate-paper results are exposed
+        run: python scripts/check_excluded_methods.py
