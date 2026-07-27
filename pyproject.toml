@@ -87,6 +87,12 @@ ignore = [
     "B008",   # function call in default arg: common in registry factories
 ]
 
+[tool.ruff.lint.isort]
+# Pin first-party packages. Left to inference, ruff classifies `xai_bench`
+# differently depending on whether the package happens to be installed, so the
+# same code passes locally and fails in CI.
+known-first-party = ["xai_bench"]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E402"]
 "scripts/smoke_test.py" = ["E402"]

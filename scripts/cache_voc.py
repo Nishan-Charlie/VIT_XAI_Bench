@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Materialise N Pascal VOC 2007 test images to a local .pt cache, in the SAME
-record schema as cache_imagenets.py, so scaled_eval.py can run the Pointing Game
+record schema as cache_imagenets.py, so the localisation metrics can run
 on a second, independent dataset.
 
 VOC is the right second dataset: its objects are frequently off-center and

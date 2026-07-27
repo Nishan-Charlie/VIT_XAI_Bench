@@ -1,17 +1,5 @@
 <div align="center">
 
-# Does Explainability Transfer?
-
-### A Controlled Benchmark of Attribution Methods on Vision Transformers and CNNs
-
-Sathiyamohan Nishankar · Nethmi Pathirana · Pubudu Sanjeewani · Asanka Perera · Selvarajah Thuseethan
-
-[![CI](https://github.com/Nishan-Charlie/VIT_XAI_Bench/actions/workflows/ci.yml/badge.svg)](https://github.com/Nishan-Charlie/VIT_XAI_Bench/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)](pyproject.toml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-
-</div>
-
 ---
 
 ## TL;DR
@@ -35,12 +23,20 @@ Every number in the figures and on the website is generated from
 
 ## Contents
 
-1. [Research question](#research-question) · 2. [Main findings](#main-findings) ·
-3. [Scope](#benchmark-scope) · 4. [Install](#installation) ·
-5. [Quick start](#quick-start) · 6. [Reproducing](#reproducing-the-benchmark) ·
-7. [Configuration](#configuration) · 8. [Results format](#result-format) ·
-9. [Website](#interactive-website) · 10. [Hardware & runtime](#hardware-and-runtime) ·
-11. [Troubleshooting](#troubleshooting) · 12. [Citation](#citation)
+- [Research question](#research-question)
+- [Main findings](#main-findings)
+- [Benchmark scope](#benchmark-scope)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Reproducing the benchmark](#reproducing-the-benchmark)
+- [Configuration](#configuration)
+- [Result format](#result-format)
+- [Interactive website](#interactive-website)
+- [Hardware and runtime](#hardware-and-runtime)
+- [Known gaps](#known-gaps)
+- [Scientific integrity](#scientific-integrity)
+- [Troubleshooting](#troubleshooting)
+- [Citation](#citation)
 
 ---
 
@@ -51,8 +47,8 @@ Every number in the figures and on the website is generated from
 
 Benchmarks routinely establish a ranking of attribution methods on a
 convolutional backbone and then apply the winner elsewhere. That inference holds
-only if the ranking is a property of the *method* rather than of the
-*architecture it was measured on*. This benchmark fixes the dataset, the metrics
+only if the ranking is a property of the _method_ rather than of the
+_architecture it was measured on_. This benchmark fixes the dataset, the metrics
 and the protocol, varies the backbone across five architecture families, and
 reads off whether the order survives.
 
@@ -63,12 +59,12 @@ reads off whether the order survives.
 Each is traceable to `results/processed/records.json` and reproducible with
 `scripts/generate_figures.py`.
 
-| Finding | Where to verify |
-|---|---|
-| Rankings are architecture-dependent; most methods change rank between CNNs and transformers. | `figures/paper/cnn_to_transformer_transfer.pdf` |
-| CAM methods score highest under bounding-box localisation on CNNs and most ViTs, and drop on linear-attention backbones. | `figures/paper/heatmap_pointing_game.pdf` |
-| Faithfulness correlation barely separates methods — values cluster near zero across the whole matrix. | `figures/paper/heatmap_faithfulness_correlation.pdf` |
-| The evaluation dimensions disagree with each other, so a single-metric ranking is not defensible. | `figures/paper/metric_correlation.pdf` |
+| Finding                                                                                                                  | Where to verify                                      |
+| ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| Rankings are architecture-dependent; most methods change rank between CNNs and transformers.                             | `figures/paper/cnn_to_transformer_transfer.pdf`      |
+| CAM methods score highest under bounding-box localisation on CNNs and most ViTs, and drop on linear-attention backbones. | `figures/paper/heatmap_pointing_game.pdf`            |
+| Faithfulness correlation barely separates methods — values cluster near zero across the whole matrix.                    | `figures/paper/heatmap_faithfulness_correlation.pdf` |
+| The evaluation dimensions disagree with each other, so a single-metric ranking is not defensible.                        | `figures/paper/metric_correlation.pdf`               |
 
 > **Two claims in the abstract are not currently backed by data in this
 > repository**: the dense-mask (metric-saturation) result and everything about
@@ -80,32 +76,32 @@ Each is traceable to `results/processed/records.json` and reproducible with
 
 ### Architectures (10 in the result set)
 
-| Family | Backbones | Attention |
-|---|---|---|
-| CNN | ResNet-50, ConvNeXt-B | none (convolutional) |
-| Isotropic ViT | ViT-B/16, DeiT-B/16 | global self-attention |
-| Hierarchical | Swin-B, PVTv2-B2 | shifted-window / spatial-reduction |
-| Hybrid | MaxViT-S, MobileViTv2-1.0 | multi-axis / separable |
-| Linear attention | EfficientViT-B1, EfficientViT-B2 | cascaded linear attention |
+| Family           | Backbones                        | Attention                          |
+| ---------------- | -------------------------------- | ---------------------------------- |
+| CNN              | ResNet-50, ConvNeXt-B            | none (convolutional)               |
+| Isotropic ViT    | ViT-B/16, DeiT-B/16              | global self-attention              |
+| Hierarchical     | Swin-B, PVTv2-B2                 | shifted-window / spatial-reduction |
+| Hybrid           | MaxViT-S, MobileViTv2-1.0        | multi-axis / separable             |
+| Linear attention | EfficientViT-B1, EfficientViT-B2 | cascaded linear attention          |
 
 ### Attribution methods (14 in the result set)
 
-| Family | Methods |
-|---|---|
-| Gradient | Saliency, Input × Gradient, Integrated Gradients, SmoothGrad, VarGrad, GradientSHAP |
-| CAM | Grad-CAM, Grad-CAM++ |
-| Perturbation | Occlusion, RISE, LIME |
-| Attention / LRP | Attention Rollout, Attention × Gradient, AttnLRP |
+| Family          | Methods                                                                             |
+| --------------- | ----------------------------------------------------------------------------------- |
+| Gradient        | Saliency, Input × Gradient, Integrated Gradients, SmoothGrad, VarGrad, GradientSHAP |
+| CAM             | Grad-CAM, Grad-CAM++                                                                |
+| Perturbation    | Occlusion, RISE, LIME                                                               |
+| Attention / LRP | Attention Rollout, Attention × Gradient, AttnLRP                                    |
 
 ### Evaluation dimensions
 
-| Dimension | Metric | Data present |
-|---|---|---|
-| Faithfulness | Faithfulness Correlation, Faithfulness Estimate, APF | ✅ 117 cells |
-| Localisation | Pointing Game (bbox) | ✅ 117 cells |
-| Robustness | Max-Sensitivity | ✅ 117 cells |
-| Complexity | Sparseness (Gini) | ✅ 117 cells |
-| Computational cost | runtime, GPU memory | ❌ **none** — see below |
+| Dimension          | Metric                                               | Data present           |
+| ------------------ | ---------------------------------------------------- | ---------------------- |
+| Faithfulness       | Faithfulness Correlation, Faithfulness Estimate, APF | ✅ 117 cells           |
+| Localisation       | Pointing Game (bbox)                                 | ✅ 117 cells           |
+| Robustness         | Max-Sensitivity                                      | ✅ 117 cells           |
+| Complexity         | Sparseness (Gini)                                    | ✅ 117 cells           |
+| Computational cost | runtime, GPU memory                                  | ❌**none** — see below |
 
 Canonical names live in [`xai_bench/taxonomy.py`](xai_bench/taxonomy.py); adding
 a backbone or method means editing that one file.
@@ -178,15 +174,15 @@ make reproduce      # build records -> validate -> figures -> website data
 
 Stage by stage:
 
-| Stage | Command |
-|---|---|
-| 1. Verify install | `python scripts/smoke_test.py` |
-| 2. Prepare data | `python scripts/cache_imagenets.py` (you supply the images) |
-| 3. Run attribution + metrics | `python -m xai_bench.runner --config <cfg>` |
-| 4. Consolidate | `python scripts/build_results.py` |
-| 5. Validate | `python scripts/validate_results.py` |
-| 6. Figures | `python scripts/generate_figures.py` |
-| 7. Website data | `python scripts/export_web_data.py` |
+| Stage                        | Command                                                     |
+| ---------------------------- | ----------------------------------------------------------- |
+| 1. Verify install            | `python scripts/smoke_test.py`                              |
+| 2. Prepare data              | `python scripts/cache_imagenets.py` (you supply the images) |
+| 3. Run attribution + metrics | `python -m xai_bench.runner --config <cfg>`                 |
+| 4. Consolidate               | `python scripts/build_results.py`                           |
+| 5. Validate                  | `python scripts/validate_results.py`                        |
+| 6. Figures                   | `python scripts/generate_figures.py`                        |
+| 7. Website data              | `python scripts/export_web_data.py`                         |
 
 `make help` lists every target.
 
@@ -202,21 +198,24 @@ Stage by stage:
 Experiments are YAML; the CLI overrides any field.
 
 ```yaml
-models:  ["vit_base_patch16_224", "resnet50"]
+models: ["vit_base_patch16_224", "resnet50"]
 methods: ["grad_cam", "integrated_gradients", "attention_rollout"]
-metrics: ["faithfulness_correlation", "pointing_game", "max_sensitivity", "sparseness"]
+metrics:
+  ["faithfulness_correlation", "pointing_game", "max_sensitivity", "sparseness"]
 
 metric_kwargs:
-  faithfulness_correlation: { nr_runs: 20, subset_size: 224, return_aggregate: false }
-  max_sensitivity:          { nr_samples: 3, lower_bound: 0.2 }
+  faithfulness_correlation:
+    { nr_runs: 20, subset_size: 224, return_aggregate: false }
+  max_sensitivity: { nr_samples: 3, lower_bound: 0.2 }
 
 dataset: "imagenets_cached"
-dataset_kwargs: { cache_path: "data/ImageNetS/cache_validation_100.pt", num_samples: 100 }
+dataset_kwargs:
+  { cache_path: "data/ImageNetS/cache_validation_100.pt", num_samples: 100 }
 num_images: 100
 seeds: [42]
 device: "auto"
 output_dir: "results"
-limit_methods_to_supported: true   # skip attention methods on backbones with no CLS attention
+limit_methods_to_supported: true # skip attention methods on backbones with no CLS attention
 ```
 
 ```bash
@@ -251,7 +250,10 @@ set. One record is one `(model, method)` cell:
   "metrics": {
     "pointing_game": { "mean": 0.927, "std": 0.261, "count": 96 }
   },
-  "provenance": { "source_run": "full_benchmark_100/summary.csv", "num_images": 96 }
+  "provenance": {
+    "source_run": "full_benchmark_100/summary.csv",
+    "num_images": 96
+  }
 }
 ```
 
@@ -281,14 +283,14 @@ served over HTTP — `fetch` is blocked on `file://`.
 
 ## Hardware and runtime
 
-| Requirement | Value |
-|---|---|
-| Python | 3.10–3.12 |
-| PyTorch | ≥ 2.1 (CUDA 12.1/12.4 for GPU) |
-| GPU VRAM | ≥ 8 GB for `*_base` backbones |
-| RAM | ≥ 16 GB |
-| Disk | ~5 GB weights + ~2 GB cached data |
-| CPU-only | fine for smoke test and tests; impractical for the full sweep |
+| Requirement | Value                                                         |
+| ----------- | ------------------------------------------------------------- |
+| Python      | 3.10–3.12                                                     |
+| PyTorch     | ≥ 2.1 (CUDA 12.1/12.4 for GPU)                                |
+| GPU VRAM    | ≥ 8 GB for`*_base` backbones                                  |
+| RAM         | ≥ 16 GB                                                       |
+| Disk        | ~5 GB weights + ~2 GB cached data                             |
+| CPU-only    | fine for smoke test and tests; impractical for the full sweep |
 
 RISE, LIME and Max-Sensitivity dominate cost — each re-explains an image many
 times. Precise per-method timings are **not stated** because the archived runs
@@ -301,13 +303,13 @@ never recorded them; the current runner does.
 Stated rather than hidden. Full accounting in
 [docs/reproducibility.md §7](docs/reproducibility.md).
 
-| Gap | Status |
-|---|---|
-| Computational cost | No data. Old runner discarded `time_ms` before aggregation; fixed, needs a re-run. |
-| Dense-mask (EBPG) localisation | No data in `results/`. `scripts/bench/ebpg_eval.py` needs a GPU re-run. |
-| Robustness / faithfulness curves | Only aggregated scalars were stored. |
-| Explanation gallery | Needs re-running attribution with pretrained weights. |
-| Grad-CAM layer inconsistency | The bbox and dense-mask paths use **different ViT layers**. Documented, not silently changed — see [docs/scientific_integrity.md §3](docs/scientific_integrity.md). |
+| Gap                              | Status                                                                                                                                                             |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Computational cost               | No data. Old runner discarded`time_ms` before aggregation; fixed, needs a re-run.                                                                                  |
+| Dense-mask (EBPG) localisation   | No data in`results/`. `scripts/bench/ebpg_eval.py` needs a GPU re-run.                                                                                             |
+| Robustness / faithfulness curves | Only aggregated scalars were stored.                                                                                                                               |
+| Explanation gallery              | Needs re-running attribution with pretrained weights.                                                                                                              |
+| Grad-CAM layer inconsistency     | The bbox and dense-mask paths use**different ViT layers**. Documented, not silently changed — see [docs/scientific_integrity.md §3](docs/scientific_integrity.md). |
 
 ---
 
@@ -329,16 +331,16 @@ citing any number.
 
 ## Troubleshooting
 
-| Symptom | Cause and fix |
-|---|---|
-| `ModuleNotFoundError: xai_bench` | Install the package: `pip install -e .` (or set `PYTHONPATH=.`). |
-| `ModuleNotFoundError: quantus` | `pip install -e .` — quantus is a core dependency. |
-| `ModuleNotFoundError: lxt` / `zennit` | Only needed for `attnlrp`: `pip install -e ".[lrp]"`. |
-| Website shows "Could not load the benchmark data" | Serve over HTTP; `fetch` is blocked on `file://`. |
-| Dataset cache not found | `data/` is gitignored — supply the images and run `scripts/cache_imagenets.py`. |
-| Gradient methods give odd values after an LRP run | `attnlrp` patches timm at class level. Run it in a separate process. |
-| Attention methods missing for a backbone | Expected: only isotropic ViTs have CLS-token attention. `limit_methods_to_supported` skips them. |
-| CUDA out of memory | Lower `num_images`, use `--device cpu`, or drop RISE/LIME from `methods`. |
+| Symptom                                           | Cause and fix                                                                                   |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `ModuleNotFoundError: xai_bench`                  | Install the package:`pip install -e .` (or set `PYTHONPATH=.`).                                 |
+| `ModuleNotFoundError: quantus`                    | `pip install -e .` — quantus is a core dependency.                                              |
+| `ModuleNotFoundError: lxt` / `zennit`             | Only needed for`attnlrp`: `pip install -e ".[lrp]"`.                                            |
+| Website shows "Could not load the benchmark data" | Serve over HTTP;`fetch` is blocked on `file://`.                                                |
+| Dataset cache not found                           | `data/` is gitignored — supply the images and run `scripts/cache_imagenets.py`.                 |
+| Gradient methods give odd values after an LRP run | `attnlrp` patches timm at class level. Run it in a separate process.                            |
+| Attention methods missing for a backbone          | Expected: only isotropic ViTs have CLS-token attention.`limit_methods_to_supported` skips them. |
+| CUDA out of memory                                | Lower`num_images`, use `--device cpu`, or drop RISE/LIME from `methods`.                        |
 
 ---
 

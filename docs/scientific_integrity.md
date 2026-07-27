@@ -26,6 +26,15 @@ All of it has been removed.
 
 Everything is recoverable from git history; nothing was destroyed.
 
+Four further scripts were deleted as **unrunnable dead code** discovered when CI
+lint flagged their import block: `scripts/sweep_gamma.py`,
+`scripts/sweep_gamma_fast.py`, `scripts/test_cplrp.py` and
+`scripts/test_cplrp_deit.py`. All four did
+`from scripts.scaled_eval import load_cache, pointing` — a module path that
+**never existed** (`scripts/` is not a package, and the only `scaled_eval.py`
+lived at `scripts/bench/`). They could not execute before this audit either, and
+their sole helper source was the HiLRP win-condition script removed above.
+
 ### What was deliberately **kept**
 
 The benchmark legitimately evaluates published relevance-propagation baselines,
@@ -67,10 +76,20 @@ the AttnLRP baseline.
 
 ### Enforcement
 
-CI fails if the string `hilrp` reappears anywhere in the repository
-(`.github/workflows/ci.yml`, job `results-integrity`), and
-`scripts/validate_results.py` rejects any record whose provenance traces to an
-excluded run.
+Three independent guards:
+
+1. **`scripts/check_excluded_methods.py`** scans the files the repository
+   actually publishes (`git ls-files`) for `hilrp` / `hi-lrp` / `hi_lrp`, and
+   exits non-zero on any hit. A short allow-list covers the files that name the
+   method *in order to document its removal* — this record, the README's
+   integrity section, the quarantine notice, and the exclusion logic itself.
+2. **`scripts/validate_results.py`** rejects any record whose provenance traces
+   to an excluded run.
+3. **`tests/test_excluded_methods.py`** asserts the guard catches every spelling
+   while *not* matching the published `attnlrp` / `CP-LRP` baselines, and that
+   the AttnLRP backend survived the removal.
+
+CI runs all three in the `results-integrity` job.
 
 ---
 
