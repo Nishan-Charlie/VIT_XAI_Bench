@@ -97,5 +97,5 @@ ignore = [
 # Legacy single-purpose research scripts, kept for provenance. Linted for real
 # errors but not restyled: rewriting them risks changing the behaviour that
 # produced the archived results.
-"scripts/bench/*" = ["E402", "E701", "E702", "E722", "C408", "B007", "F841", "E741", "C416"]
-"scripts/*.py" = ["E402", "E701", "E702", "E722", "C408", "B007", "F841", "E741", "C416"]
+"scripts/bench/*" = ["E402", "E701", "E702", "E722", "C408", "B007", "F841", "E741", "C416", "UP031"]
+"scripts/*.py" = ["E402", "E701", "E702", "E722", "C408", "B007", "F841", "E741", "C416", "UP031"]

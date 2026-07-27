@@ -20,11 +20,16 @@ import argparse
 import csv
 import json
 import math
+import sys
 from collections import Counter
 from pathlib import Path
 
-from xai_bench import taxonomy
-from xai_bench.results_schema import (
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from xai_bench import taxonomy  # noqa: E402
+from xai_bench.results_schema import (  # noqa: E402
     SCHEMA_VERSION,
     MetricValue,
     Provenance,
@@ -32,7 +37,6 @@ from xai_bench.results_schema import (
     validate_collection,
 )
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RAW = REPO_ROOT / "results" / "raw" / "benchmark_runs.csv"
 OUT_DIR = REPO_ROOT / "results" / "processed"
 
