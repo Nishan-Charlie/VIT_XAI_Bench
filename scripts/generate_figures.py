@@ -456,9 +456,11 @@ def main() -> int:
          "results store only aggregated correlations, not deletion/insertion "
          "curves. Per-step pixel-flipping traces are required.")
     skip("explanation_gallery",
-         "requires re-running attribution on images with pretrained weights; "
-         "cannot be derived from aggregated records. Use "
-         "scripts/bench/benchmark_qualitative.py on a GPU.")
+         "cannot be derived from aggregated records — it needs the attribution "
+         "maps themselves. Static versions already exist at "
+         "figures/bench/{qualitative_grid_cat,bench_qualitative,"
+         "cam_upsampling_artifact}.png; regenerate them with "
+         "scripts/bench/qualitative_grid_cat.py on a GPU.")
 
     print(f"\n{len(_SKIPPED)} figure(s) skipped for lack of source data.")
     print(f"Figures written to {args.out}")

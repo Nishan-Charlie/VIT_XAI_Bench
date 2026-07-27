@@ -59,6 +59,7 @@ a:hover { color: var(--link-dark); text-decoration: underline; }
 
 .container { width: min(100% - 3rem, var(--container)); margin-inline: auto; }
 .container.narrow { width: min(100% - 3rem, 820px); }
+.container.wide { width: min(100% - 3rem, 1240px); }
 
 .visually-hidden {
   position: absolute !important;
@@ -399,4 +400,28 @@ pre code { font-family: inherit; font-size: inherit; }
   *, *::before, *::after {
     animation-duration: .001ms !important; transition-duration: .001ms !important;
   }
+}
+
+
+/* ─────────────────────── standalone figure blocks ─────────────────── */
+
+.figure-block { margin: 0; }
+.figure-block a {
+  display: block; border: 1px solid var(--rule); border-radius: 6px;
+  overflow: hidden; background: var(--surface); line-height: 0;
+}
+.figure-block a:hover { border-color: var(--rule-strong); }
+.figure-block img { width: 100%; height: auto; display: block; }
+.figure-block figcaption {
+  text-align: left; max-width: 78ch; margin: 1rem auto 0;
+}
+.figcaption-src {
+  display: block; margin-top: .5rem; font-size: .82rem; color: var(--ink-3);
+}
+.swatch-key {
+  display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap;
+}
+.swatch-fail {
+  display: inline-block; width: 13px; height: 13px; border-radius: 2px;
+  border: 2.5px solid #c1121f; vertical-align: middle;
 }

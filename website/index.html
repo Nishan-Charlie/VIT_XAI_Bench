@@ -232,6 +232,73 @@
     </div>
   </section>
 
+  <!-- ══════════════════════ qualitative gallery ══════════════════ -->
+  <section id="gallery" class="section">
+    <div class="container wide">
+      <h2 class="section-title">Explanation gallery</h2>
+      <p class="section-intro">
+        One image, every backbone &times; every attribution method. Rows are the
+        eight benchmark backbones, columns the attribution methods. Each model is
+        explained at its own top-1 class.
+      </p>
+
+      <figure class="figure-block">
+        <a href="public/figures/qualitative_grid_cat.png" target="_blank" rel="noopener">
+          <img src="public/figures/qualitative_grid_cat.png"
+               alt="Grid of attribution heatmaps: eight backbones as rows, attribution
+                    methods as columns, computed on a single cat image. Red borders mark
+                    documented collapse cases; grey n/a cells mark methods that do not
+                    apply to that backbone."
+               loading="lazy" width="2000" height="1280">
+        </a>
+        <figcaption>
+          <b>The architecture dependence is visible directly.</b>
+          <span class="swatch-key"><span class="swatch-fail"></span>Red border</span> marks
+          documented collapse cases &mdash; the Grad-CAM family on the linear-attention
+          EfficientViT backbones, and attention rollout on ViT-B/16, which spreads over the
+          background rather than the object. Grey <code>n/a</code> cells are methods that do
+          not apply to that backbone: rollout needs a global CLS-token attention map, which
+          only the isotropic ViT has.
+          <span class="figcaption-src">Source:
+          <code>scripts/bench/qualitative_grid_cat.py</code></span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ CAM upsampling artefact ═════════════════ -->
+  <section id="upsampling" class="section alt">
+    <div class="container wide">
+      <h2 class="section-title">Where the CAM squares come from</h2>
+      <p class="section-intro">
+        Grad-CAM maps on hierarchical backbones show blocky square structure. It
+        is not a property of the explanation &mdash; it is the terminal feature
+        grid made visible.
+      </p>
+
+      <figure class="figure-block">
+        <a href="public/figures/cam_upsampling_artifact.png" target="_blank" rel="noopener">
+          <img src="public/figures/cam_upsampling_artifact.png"
+               alt="For Swin-B, PVT-v2 and MaxViT-S: the input image, then Grad-CAM and
+                    Grad-CAM++ shown both on the raw 7x7 terminal grid and after bilinear
+                    upsampling to input resolution."
+               loading="lazy" width="1600" height="990">
+        </a>
+        <figcaption>
+          <b>A 7&times;7 terminal grid upsampled 32&times; to input resolution.</b>
+          Every heatmap these backbones produce carries at most 49 independent
+          values, whatever the interpolation makes it look like. Both CAM variants
+          inherit it. This bounds how precisely a CAM can localise on these
+          architectures, and is worth keeping in mind when reading bounding-box
+          localisation scores &mdash; a box is coarse enough to forgive a 32&times;
+          upsample.
+          <span class="figcaption-src">Source:
+          <code>scripts/bench/cam_upsampling_artifact.py</code></span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
   <!-- ═══════════════════════ coverage / honesty ══════════════════ -->
   <section id="coverage" class="section">
     <div class="container">

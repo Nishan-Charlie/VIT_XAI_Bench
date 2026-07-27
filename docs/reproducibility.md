@@ -67,7 +67,7 @@ Then the test suite:
 pytest tests -v
 ```
 
-Expected: **59 passed**.
+Expected: **80 passed**.
 
 ---
 
@@ -188,6 +188,7 @@ python scripts/build_results.py       # raw run summaries -> canonical records
 python scripts/validate_results.py    # schema, ranges, duplicates, integrity
 python scripts/generate_figures.py    # -> figures/paper/*.{pdf,png}
 python scripts/export_web_data.py     # -> website/public/data/*.json
+python scripts/export_web_assets.py   # -> website/public/figures/*.png (downscaled)
 ```
 
 Or all of it:
@@ -206,8 +207,8 @@ python -m http.server 8000 --directory website
 ### Expected output of `build_results.py`
 
 ```
-rows read              : 527
-dropped (other paper)  : 400
+rows read              : 127
+dropped (other paper)  : 0
 records written        : 117
   models 10  methods 14
   ** dimension 'computational_cost' has NO data **
@@ -240,5 +241,5 @@ Stated plainly rather than papered over.
 | Computational-cost dimension | **No data.** | The old runner discarded `time_ms` before aggregation. Fixed going forward. |
 | Dense-mask (EBPG) localisation | **No data in `results/`.** | `scripts/bench/ebpg_eval.py` writes `results/ebpg_results.json`, which was never committed. Needs a GPU re-run. |
 | Robustness / faithfulness *curves* | **Not available.** | Only aggregated scalars were stored; curves need a per-perturbation sweep. |
-| Explanation gallery images | **Not derivable from records.** | Requires re-running attribution with pretrained weights on a GPU. |
+| Explanation gallery images | **Available as static figures** (`figures/bench/qualitative_grid_cat.png`, `bench_qualitative.png`, `cam_upsampling_artifact.png`), shipped to the website by `scripts/export_web_assets.py`. | Regenerating them requires a GPU and pretrained weights; they are not derivable from the aggregated records. |
 | Provenance for archived runs | **Partial.** | Git commit, seed, dataset and timestamps were not recorded before this audit. `manifest.json` lists the gaps; new runs record everything. |

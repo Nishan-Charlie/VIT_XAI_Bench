@@ -2,7 +2,7 @@
 .DEFAULT_GOAL := help
 PY ?= python
 
-.PHONY: help install smoke test lint format check build-results validate figures web reproduce serve clean
+.PHONY: help install smoke test lint format check build-results validate figures web assets reproduce serve clean
 
 help:  ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -37,7 +37,10 @@ figures:  ## Generate paper figures from the records
 web:  ## Export JSON for the website
 	$(PY) scripts/export_web_data.py
 
-reproduce: build-results validate figures web  ## Records -> validation -> figures -> website
+assets:  ## Export web-optimised figure assets into website/public/figures
+	$(PY) scripts/export_web_assets.py
+
+reproduce: build-results validate figures web assets  ## Records -> validation -> figures -> website
 	@echo "Done. Serve the site with: make serve"
 
 serve:  ## Serve the website on http://localhost:8000
