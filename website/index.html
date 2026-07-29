@@ -39,6 +39,7 @@
       <ul class="link-buttons">
         <li><a href="https://github.com/Nishan-Charlie/VIT_XAI_Bench"><span class="icon">&#9881;</span>Code</a></li>
         <li><a href="#results"><span class="icon">&#9636;</span>Results</a></li>
+        <li><a href="#dataset"><span class="icon">&#9707;</span>Dataset</a></li>
         <li><a href="#reproduce"><span class="icon">&#8635;</span>Reproducibility</a></li>
         <li><a href="public/data/benchmark.json"><span class="icon">&#8681;</span>Raw data</a></li>
         <li><a href="#bibtex"><span class="icon">&#8220;</span>BibTeX</a></li>
@@ -299,8 +300,81 @@
     </div>
   </section>
 
+  <!-- ═══════════════════════════ dataset ═════════════════════════ -->
+  <section id="dataset" class="section">
+    <div class="container narrow">
+      <h2 class="section-title">Dataset</h2>
+      <p class="section-intro">
+        Every backbone and every attribution method is evaluated on the same
+        images, so differences in the results come from the architecture and the
+        method rather than from the data.
+      </p>
+
+      <div class="dataset-card">
+        <h3 class="dataset-name">ImageNet-S</h3>
+        <p>
+          ImageNet validation images paired with pixel-level semantic
+          segmentation masks. The masks give localisation metrics a real object
+          boundary instead of a bounding box &mdash; which is what makes the
+          bounding-box versus dense-mask comparison possible at all.
+        </p>
+        <dl class="dataset-facts">
+          <div>
+            <dt>Source</dt>
+            <dd>
+              <a href="https://huggingface.co/datasets/braceletboy/imagenet-s"
+                 target="_blank" rel="noopener">braceletboy/imagenet-s</a>
+              on the Hugging Face Hub
+            </dd>
+          </div>
+          <div>
+            <dt>Split</dt>
+            <dd><code>validation</code></dd>
+          </div>
+          <div>
+            <dt>Original project</dt>
+            <dd>
+              <a href="https://github.com/LUSSeg/ImageNet-S"
+                 target="_blank" rel="noopener">LUSSeg/ImageNet-S</a>
+            </dd>
+          </div>
+          <div>
+            <dt>Redistributed here</dt>
+            <dd>No &mdash; you fetch it yourself; see below</dd>
+          </div>
+        </dl>
+
+        <p class="dataset-sub">Loaded as:</p>
+        <pre><code>from datasets import load_dataset
+
+ds = load_dataset("braceletboy/imagenet-s", split="validation", streaming=True)</code></pre>
+
+        <p class="note">
+          The benchmark configs read a local <code>.pt</code> cache rather than
+          the live stream. Streaming is unreliable over long runs, so
+          <code>scripts/cache_imagenets.py</code> pulls the sample once with
+          retries and every run then reads from disk &mdash; which also pins the
+          runs to a fixed sample set instead of whatever the stream happened to
+          yield.
+        </p>
+
+        <p class="dataset-cite">
+          Using this benchmark means using ImageNet-S &mdash; please cite it as well:
+        </p>
+        <pre><code>@article{gao2022luss,
+  title={Large-scale Unsupervised Semantic Segmentation},
+  author={Gao, Shanghua and Li, Zhong-Yu and Yang, Ming-Hsuan and
+          Cheng, Ming-Ming and Han, Junwei and Torr, Philip},
+  journal={IEEE Transactions on Pattern Analysis and Machine
+           Intelligence (TPAMI)},
+  year={2022}
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
   <!-- ═══════════════════════ coverage / honesty ══════════════════ -->
-  <section id="coverage" class="section">
+  <section id="coverage" class="section alt">
     <div class="container">
       <h2 class="section-title">What is measured</h2>
       <p class="section-intro">
@@ -316,7 +390,7 @@
   </section>
 
   <!-- ═══════════════════════ reproducibility ═════════════════════ -->
-  <section id="reproduce" class="section alt">
+  <section id="reproduce" class="section">
     <div class="container narrow">
       <h2 class="section-title">Reproducing these results</h2>
       <p class="section-intro">

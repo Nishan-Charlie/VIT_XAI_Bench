@@ -73,23 +73,44 @@ Expected: **80 passed**.
 
 ## 3. Data
 
-The benchmark evaluates on **ImageNet-S** (ImageNet validation images with
-pixel-level segmentation masks) and uses VOC-2007 boxes for some localisation
-runs. Neither is redistributed here.
+The benchmark evaluates on **ImageNet-S** — ImageNet validation images paired
+with pixel-level semantic segmentation masks. Neither the images nor the masks
+are redistributed here; `data/` is gitignored.
 
-```bash
-# ImageNet-S masks + the ImageNet validation images they index
-#   https://github.com/LUSSeg/ImageNet-S
-# Then build the tensor caches the configs expect:
-python scripts/cache_imagenets.py      # -> data/ImageNetS/cache_validation_*.pt
-python scripts/cache_voc.py            # -> data/VOC/cache_voc_1000.pt
+| | |
+|---|---|
+| Source | [`braceletboy/imagenet-s`](https://huggingface.co/datasets/braceletboy/imagenet-s) (Hugging Face Hub) |
+| Split | `validation` |
+| Original project | [LUSSeg/ImageNet-S](https://github.com/LUSSeg/ImageNet-S) — cite `gao2022luss` |
+
+Both dataset entry points resolve to the same source:
+
+```python
+from datasets import load_dataset
+
+ds = load_dataset("braceletboy/imagenet-s", split="validation", streaming=True)
 ```
 
-> **You must supply the source images yourself.** `data/` is gitignored. If the
-> caches are absent, the benchmark configs will fail at dataset construction —
-> the smoke test does not need them.
+* `imagenets` — streams directly (`xai_bench/datasets/imagenet_s.py`)
+* `imagenets_cached` — reads a local `.pt` cache; **this is what the configs use**
 
-Model weights are downloaded by `timm` on first use from the HuggingFace hub;
+Build the caches once:
+
+```bash
+pip install -e ".[data]"            # `datasets`, needed only for streaming
+python scripts/cache_imagenets.py   # -> data/ImageNetS/cache_validation_*.pt
+python scripts/cache_voc.py         # -> data/VOC/cache_voc_1000.pt  (VOC-2007 boxes)
+```
+
+`cache_imagenets.py` retries because HF streaming drops connections on long
+pulls. Caching is not just a speed optimisation: it pins every run to a **fixed
+sample set**, so two runs compare the same images rather than whatever the
+stream happened to yield.
+
+> If the caches are absent the benchmark configs fail at dataset construction.
+> The smoke test and the unit tests do not need them.
+
+Model weights are downloaded by `timm` on first use from the Hugging Face Hub;
 none are committed.
 
 ---

@@ -425,3 +425,41 @@ pre code { font-family: inherit; font-size: inherit; }
   display: inline-block; width: 13px; height: 13px; border-radius: 2px;
   border: 2.5px solid #c1121f; vertical-align: middle;
 }
+
+/* ────────────────────────────── dataset card ──────────────────────── */
+
+.dataset-card {
+  border: 1px solid var(--rule); border-radius: 6px;
+  padding: 1.5rem 1.6rem; background: var(--surface);
+}
+.dataset-name { font-size: 1.25rem; font-weight: 700; margin: 0 0 .6rem; }
+.dataset-card > p { margin: 0 0 1.1rem; }
+.dataset-facts {
+  margin: 0 0 1.3rem; padding: 1rem 0; border-block: 1px solid var(--rule);
+  display: grid; gap: .55rem;
+}
+.dataset-facts > div {
+  display: grid; grid-template-columns: minmax(120px, 170px) 1fr;
+  gap: 1rem; align-items: baseline;
+}
+.dataset-facts dt {
+  font-size: .78rem; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--ink-3); font-weight: 700;
+}
+.dataset-facts dd { margin: 0; font-size: .95rem; }
+/* Short field label: uppercase reads as a label. */
+.dataset-sub {
+  font-size: .82rem; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--ink-3); font-weight: 700; margin: 1.3rem 0 .5rem;
+}
+/* Full sentence: keep sentence case, and separate it from the note above. */
+.dataset-cite {
+  font-size: .95rem; color: var(--ink); font-weight: 700;
+  margin: 1.75rem 0 .6rem; padding-top: 1.4rem;
+  border-top: 1px solid var(--rule);
+}
+.dataset-card .note { margin: 1rem 0 0; }
+
+@media (max-width: 620px) {
+  .dataset-facts > div { grid-template-columns: 1fr; gap: .1rem; }
+}
