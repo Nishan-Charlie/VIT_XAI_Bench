@@ -174,12 +174,23 @@ def load_cost(path: Path) -> list[dict]:
     return out
 
 
-def build_manifest(records: list[ResultRecord], report: dict, problems: list[str]) -> dict:
+def build_manifest(
+    records: list[ResultRecord],
+    report: dict,
+    problems: list[str],
+    cost: list[dict] | None = None,
+) -> dict:
     """Coverage matrix and honest accounting of what is and is not measured."""
+    cost = cost or []
     covered = {(r.model, r.method) for r in records}
     metric_coverage = {
         key: sum(1 for r in records if key in r.metrics) for key in taxonomy.METRICS
     }
+    # Attribution timings live outside the per-cell records (one figure per
+    # method), so count them from the cost table rather than from the records.
+    if cost:
+        metric_coverage["attribution_time_ms"] = len(cost)
+
     dimensions = {}
     for dim, metric_keys in taxonomy.METRICS_BY_DIMENSION.items():
         measured = sum(metric_coverage.get(k, 0) for k in metric_keys)
@@ -187,6 +198,8 @@ def build_manifest(records: list[ResultRecord], report: dict, problems: list[str
             "metrics": metric_keys,
             "records_with_data": measured,
             "status": "measured" if measured else "not_available",
+            # Cost is reported per method, not per (model, method) cell.
+            "granularity": "method" if dim == "computational_cost" else "cell",
         }
 
     missing_cells = []
@@ -254,7 +267,7 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    manifest = build_manifest(records, report, problems)
+    manifest = build_manifest(records, report, problems, cost)
     manifest["cost_methods"] = len(cost)
     (args.out / "manifest.json").write_text(
         json.dumps(manifest, indent=2), encoding="utf-8"
@@ -273,6 +286,8 @@ def main() -> int:
     for dim, info in manifest["dimensions"].items():
         if info["status"] == "not_available":
             print(f"  ** dimension '{dim}' has NO data **")
+        elif info.get("granularity") == "method":
+            print(f"  note: '{dim}' is reported per method, not per cell")
     if problems:
         print(f"\n{len(problems)} validation problem(s):")
         for p in problems[:20]:

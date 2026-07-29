@@ -18,7 +18,7 @@
     "pointing_game": 117,
     "max_sensitivity": 117,
     "sparseness": 117,
-    "attribution_time_ms": 0
+    "attribution_time_ms": 13
   },
   "dimensions": {
     "faithfulness": {
@@ -28,35 +28,40 @@
         "apf"
       ],
       "records_with_data": 262,
-      "status": "measured"
+      "status": "measured",
+      "granularity": "cell"
     },
     "localization": {
       "metrics": [
         "pointing_game"
       ],
       "records_with_data": 117,
-      "status": "measured"
+      "status": "measured",
+      "granularity": "cell"
     },
     "robustness": {
       "metrics": [
         "max_sensitivity"
       ],
       "records_with_data": 117,
-      "status": "measured"
+      "status": "measured",
+      "granularity": "cell"
     },
     "complexity": {
       "metrics": [
         "sparseness"
       ],
       "records_with_data": 117,
-      "status": "measured"
+      "status": "measured",
+      "granularity": "cell"
     },
     "computational_cost": {
       "metrics": [
         "attribution_time_ms"
       ],
-      "records_with_data": 0,
-      "status": "not_available"
+      "records_with_data": 13,
+      "status": "measured",
+      "granularity": "method"
     }
   },
   "missing_cells": [
