@@ -165,6 +165,12 @@ METRICS: dict[str, MetricSpec] = {
             "Gini coefficient of the attribution map (Chalasani et al., 2020). "
             "Higher means fewer features carry the explanation.",
         ),
+        MetricSpec(
+            "attribution_time_ms", "Attribution time", "computational_cost",
+            False, (0.0, None),
+            "Wall-clock time to produce one explanation, in milliseconds. "
+            "Lower is cheaper.",
+        ),
     ]
 }
 

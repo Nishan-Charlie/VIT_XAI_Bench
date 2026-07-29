@@ -38,6 +38,7 @@ from xai_bench.results_schema import (  # noqa: E402
 )
 
 DEFAULT_RAW = REPO_ROOT / "results" / "raw" / "benchmark_runs.csv"
+DEFAULT_COST = REPO_ROOT / "results" / "raw" / "computational_cost.csv"
 OUT_DIR = REPO_ROOT / "results" / "processed"
 
 #: Runs belonging to a different paper. Their rows are excluded from this
@@ -138,6 +139,41 @@ def build_records(rows: list[dict]) -> tuple[list[ResultRecord], dict]:
     return list(records.values()), report
 
 
+
+def load_cost(path: Path) -> list[dict]:
+    """Method-level attribution timings.
+
+    Kept separate from ``records.json`` because this is one figure per method,
+    not one per (model, method) cell. Folding it into the cell records would
+    mean repeating the same number across every backbone as though it had been
+    measured there, which it was not.
+    """
+    if not path.exists():
+        return []
+    with path.open(newline="", encoding="utf-8-sig") as fh:
+        rows = list(csv.DictReader(line for line in fh if not line.startswith("#")))
+
+    out = []
+    for row in rows:
+        method = (row.get("method") or "").strip()
+        if method not in taxonomy.METHODS:
+            print(f"  warning: unknown method in cost data: {method!r}")
+            continue
+        value = _float(row.get("time_ms"))
+        if value is None:
+            continue
+        out.append({
+            "method": method,
+            "method_label": taxonomy.METHODS[method].label,
+            "method_family": taxonomy.method_family(method),
+            "time_ms": value,
+            "restricted_backbones": (row.get("restricted_backbones") or "").strip().lower()
+            == "true",
+        })
+    out.sort(key=lambda r: r["time_ms"])
+    return out
+
+
 def build_manifest(records: list[ResultRecord], report: dict, problems: list[str]) -> dict:
     """Coverage matrix and honest accounting of what is and is not measured."""
     covered = {(r.model, r.method) for r in records}
@@ -188,6 +224,8 @@ def build_manifest(records: list[ResultRecord], report: dict, problems: list[str
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--raw", type=Path, default=DEFAULT_RAW, help="raw summary CSV")
+    ap.add_argument("--cost", type=Path, default=DEFAULT_COST,
+                    help="method-level attribution timings CSV")
     ap.add_argument("--out", type=Path, default=OUT_DIR, help="output directory")
     args = ap.parse_args()
 
@@ -210,7 +248,14 @@ def main() -> int:
     (args.out / "records.json").write_text(
         json.dumps(payload, indent=2), encoding="utf-8"
     )
+    cost = load_cost(args.cost)
+    (args.out / "method_cost.json").write_text(
+        json.dumps({"schema_version": SCHEMA_VERSION, "methods": cost}, indent=2),
+        encoding="utf-8",
+    )
+
     manifest = build_manifest(records, report, problems)
+    manifest["cost_methods"] = len(cost)
     (args.out / "manifest.json").write_text(
         json.dumps(manifest, indent=2), encoding="utf-8"
     )

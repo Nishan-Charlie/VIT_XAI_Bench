@@ -17,7 +17,8 @@
     "apf": 28,
     "pointing_game": 117,
     "max_sensitivity": 117,
-    "sparseness": 117
+    "sparseness": 117,
+    "attribution_time_ms": 0
   },
   "dimensions": {
     "faithfulness": {
@@ -51,7 +52,9 @@
       "status": "measured"
     },
     "computational_cost": {
-      "metrics": [],
+      "metrics": [
+        "attribution_time_ms"
+      ],
       "records_with_data": 0,
       "status": "not_available"
     }
@@ -234,5 +237,6 @@
     "cuda_version": 117,
     "gpu_name": 117
   },
-  "validation_problems": []
+  "validation_problems": [],
+  "cost_methods": 13
 }

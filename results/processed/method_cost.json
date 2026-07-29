@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0.0",
+  "methods": [
+    {
+      "method": "smoothgrad",
+      "method_label": "SmoothGrad",
+      "method_family": "gradient",
+      "time_ms": 20.9,
+      "restricted_backbones": false
+    },
+    {
+      "method": "input_x_gradient",
+      "method_label": "Input \u00d7 Gradient",
+      "method_family": "gradient",
+      "time_ms": 22.1,
+      "restricted_backbones": false
+    },
+    {
+      "method": "grad_cam_plus_plus",
+      "method_label": "Grad-CAM++",
+      "method_family": "cam",
+      "time_ms": 24.0,
+      "restricted_backbones": false
+    },
+    {
+      "method": "grad_cam",
+      "method_label": "Grad-CAM",
+      "method_family": "cam",
+      "time_ms": 26.5,
+      "restricted_backbones": false
+    },
+    {
+      "method": "saliency",
+      "method_label": "Saliency",
+      "method_family": "gradient",
+      "time_ms": 31.9,
+      "restricted_backbones": false
+    },
+    {
+      "method": "gradient_shap",
+      "method_label": "GradientSHAP",
+      "method_family": "gradient",
+      "time_ms": 32.7,
+      "restricted_backbones": false
+    },
+    {
+      "method": "vargrad",
+      "method_label": "VarGrad",
+      "method_family": "gradient",
+      "time_ms": 40.4,
+      "restricted_backbones": false
+    },
+    {
+      "method": "attention_rollout",
+      "method_label": "Attention Rollout",
+      "method_family": "attention_lrp",
+      "time_ms": 41.0,
+      "restricted_backbones": true
+    },
+    {
+      "method": "attnlrp",
+      "method_label": "AttnLRP",
+      "method_family": "attention_lrp",
+      "time_ms": 57.4,
+      "restricted_backbones": true
+    },
+    {
+      "method": "integrated_gradients",
+      "method_label": "Integrated Gradients",
+      "method_family": "gradient",
+      "time_ms": 479.6,
+      "restricted_backbones": false
+    },
+    {
+      "method": "rise",
+      "method_label": "RISE",
+      "method_family": "perturbation",
+      "time_ms": 669.9,
+      "restricted_backbones": false
+    },
+    {
+      "method": "lime",
+      "method_label": "LIME",
+      "method_family": "perturbation",
+      "time_ms": 1488.1,
+      "restricted_backbones": false
+    },
+    {
+      "method": "occlusion",
+      "method_label": "Occlusion",
+      "method_family": "perturbation",
+      "time_ms": 11011.1,
+      "restricted_backbones": false
+    }
+  ]
+}
