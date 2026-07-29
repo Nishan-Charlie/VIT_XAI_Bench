@@ -51,12 +51,15 @@ dependencies = [
 lrp = ["lxt>=0.6", "zennit>=0.5"]
 # Perturbation methods with heavier dependencies.
 perturbation = ["grad-cam>=1.5", "lime>=0.2"]
+# Streaming the ImageNet-S source dataset from the Hugging Face Hub. Not needed
+# once the .pt caches exist, so the lazy import stays optional.
+data = ["datasets>=2.14"]
 dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
     "ruff>=0.6",
 ]
-all = ["xai-bench[lrp,perturbation,dev]"]
+all = ["xai-bench[lrp,perturbation,data,dev]"]
 
 [project.urls]
 Repository = "https://github.com/Nishan-Charlie/VIT_XAI_Bench"

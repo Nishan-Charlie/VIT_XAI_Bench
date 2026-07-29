@@ -39,6 +39,7 @@ Every number in the figures and on the website is generated from
 - [Research question](#research-question)
 - [Main findings](#main-findings)
 - [Benchmark scope](#benchmark-scope)
+- [Dataset](#dataset)
 - [Installation](#installation)
 - [Quick start](#quick-start)
 - [Reproducing the benchmark](#reproducing-the-benchmark)
@@ -120,6 +121,43 @@ backbone × method gallery and the upsampling breakdown are on the
 | CAM             | Grad-CAM, Grad-CAM++                                                                |
 | Perturbation    | Occlusion, RISE, LIME                                                               |
 | Attention / LRP | Attention Rollout, Attention × Gradient, AttnLRP                                    |
+
+### Dataset
+
+The benchmark evaluates on **ImageNet-S** — ImageNet validation images paired
+with pixel-level semantic segmentation masks. The masks give localisation
+metrics a real object boundary rather than a bounding box.
+
+| | |
+|---|---|
+| Source | [`braceletboy/imagenet-s`](https://huggingface.co/datasets/braceletboy/imagenet-s) on the Hugging Face Hub |
+| Split used | `validation` |
+| Original project | [LUSSeg/ImageNet-S](https://github.com/LUSSeg/ImageNet-S) |
+| Cached in this repo | no — `data/` is gitignored; you build the caches locally |
+
+Both dataset entry points stream from the same source:
+
+```python
+from datasets import load_dataset
+
+ds = load_dataset("braceletboy/imagenet-s", split="validation", streaming=True)
+```
+
+- `imagenets` — streams directly (registered in `xai_bench/datasets/imagenet_s.py`)
+- `imagenets_cached` — reads a local `.pt` cache built by `scripts/cache_imagenets.py`
+
+The configs use `imagenets_cached`. Streaming is flaky over long runs, so the
+cache script pulls once with retries and every benchmark run then reads from
+disk — which also makes runs reproducible against a fixed sample set rather than
+whatever the stream happened to yield.
+
+```bash
+pip install -e ".[data]"          # brings in `datasets`, needed only for streaming
+python scripts/cache_imagenets.py # -> data/ImageNetS/cache_validation_*.pt
+```
+
+VOC-2007 boxes are used for some bounding-box localisation runs; see
+`scripts/cache_voc.py`.
 
 ### Evaluation dimensions
 
@@ -419,6 +457,24 @@ results-integrity check. None of it requires a GPU.
   year    = {2026}
 }
 ```
+
+If you use the benchmark you are also using **ImageNet-S**, which should be
+cited in its own right:
+
+```bibtex
+@article{gao2022luss,
+  title={Large-scale Unsupervised Semantic Segmentation},
+  author={Gao, Shanghua and Li, Zhong-Yu and Yang, Ming-Hsuan and Cheng, Ming-Ming
+          and Han, Junwei and Torr, Philip},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence (TPAMI)},
+  year={2022}
+}
+```
+
+> The key above (`gao2022luss`) is the one published by the upstream
+> [LUSSeg/ImageNet-S](https://github.com/LUSSeg/ImageNet-S) repository. If your
+> manuscript already cites this work as `gao2022imagenets`, that is the same
+> paper under a different local BibTeX key — keep whichever your `.bib` uses.
 
 Built on [Quantus](https://github.com/understandable-machine-intelligence-lab/Quantus),
 [timm](https://github.com/huggingface/pytorch-image-models),
