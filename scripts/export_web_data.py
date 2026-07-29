@@ -33,6 +33,7 @@ from xai_bench.utils import provenance  # noqa: E402
 
 DEFAULT_RECORDS = REPO_ROOT / "results" / "processed" / "records.json"
 DEFAULT_MANIFEST = REPO_ROOT / "results" / "processed" / "manifest.json"
+DEFAULT_COST = REPO_ROOT / "results" / "processed" / "method_cost.json"
 DEFAULT_OUT = REPO_ROOT / "website" / "public" / "data"
 
 TRANSFORMER_FAMILIES = ("isotropic_vit", "hierarchical", "hybrid", "linear_attention")
@@ -110,6 +111,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--records", type=Path, default=DEFAULT_RECORDS)
     ap.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    ap.add_argument("--cost", type=Path, default=DEFAULT_COST)
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
     args = ap.parse_args()
 
@@ -123,8 +125,14 @@ def main() -> int:
         json.loads(args.manifest.read_text(encoding="utf-8"))
         if args.manifest.exists() else {}
     )
+    cost = (
+        json.loads(args.cost.read_text(encoding="utf-8")).get("methods", [])
+        if args.cost.exists() else []
+    )
 
     measured_metrics = sorted({m for r in records for m in (r.get("metrics") or {})})
+    if cost:
+        measured_metrics = sorted({*measured_metrics, "attribution_time_ms"})
 
     dimensions = []
     for dim in taxonomy.DIMENSIONS:
@@ -135,6 +143,8 @@ def main() -> int:
                 "label": dim.replace("_", " ").title(),
                 "metrics": keys,
                 "status": "measured",
+                # Cost is one figure per method; everything else is per cell.
+                "granularity": "method" if dim == "computational_cost" else "cell",
             })
         else:
             dimensions.append({
@@ -193,6 +203,7 @@ def main() -> int:
         "records": records,
         "rankings": {m: build_rankings(records, m) for m in measured_metrics},
         "transfer": {m: build_transfer(records, m) for m in measured_metrics},
+        "cost": cost,
         "coverage": manifest.get("metric_coverage", {}),
         "missing_cells": manifest.get("missing_cells", []),
     }
@@ -210,6 +221,7 @@ def main() -> int:
         "n_models_in_results": len({r["model"] for r in records}),
         "n_methods_in_results": len({r["method"] for r in records}),
         "measured_metrics": measured_metrics,
+        "n_cost_methods": len(cost),
         "unmeasured_dimensions": [
             d["key"] for d in dimensions if d["status"] == "not_available"
         ],

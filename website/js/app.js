@@ -530,6 +530,85 @@ function renderArchDetail() {
     `Scored by ${spec.label}. “vs mean” compares with this method's average over all backbones.`));
 }
 
+
+/* ═════════════════════════ computational cost ═════════════════════ */
+
+function renderCost() {
+  const host = $('#cost-chart');
+  const note = $('#cost-note');
+  if (!host) return;
+  host.innerHTML = '';
+
+  const rows = state.data.cost || [];
+  if (!rows.length) {
+    note.textContent = 'No attribution timings in the exported results.';
+    return;
+  }
+
+  // Log scale: the range spans ~3 orders of magnitude, so a linear axis would
+  // collapse every gradient method into one indistinguishable stub.
+  const times = rows.map((r) => r.time_ms);
+  const lo = Math.min(...times), hi = Math.max(...times);
+  const logLo = Math.log10(lo), logHi = Math.log10(hi);
+  const frac = (v) => (Math.log10(v) - logLo) / (logHi - logLo || 1);
+
+  const famColor = {
+    gradient: css('--s1'),
+    cam: css('--s3'),
+    perturbation: css('--s2'),
+    attention_lrp: css('--seq-5'),
+  };
+
+  rows.forEach((r) => {
+    const row = el('div', 'cost-row');
+    const name = el('div', 'cost-name');
+    name.append(document.createTextNode(r.method_label));
+    if (r.restricted_backbones) {
+      const dag = el('span', 'cost-dagger', '†');
+      dag.title = 'Measured only on the backbones where the method applies';
+      name.append(dag);
+    }
+    row.append(name);
+
+    const track = el('div', 'cost-track');
+    const bar = el('div', 'cost-bar');
+    bar.style.width = `${Math.max(2, frac(r.time_ms) * 100)}%`;
+    bar.style.background = famColor[r.method_family] || css('--neutral-mark');
+    track.append(bar);
+    row.append(track);
+
+    const value = el('div', 'cost-value');
+    value.textContent = r.time_ms >= 1000
+      ? `${(r.time_ms / 1000).toFixed(2)} s`
+      : `${r.time_ms.toFixed(1)} ms`;
+    row.append(value);
+    host.append(row);
+  });
+
+  // legend by method family
+  const legend = el('div', 'cost-legend');
+  const seen = [];
+  rows.forEach((r) => { if (!seen.includes(r.method_family)) seen.push(r.method_family); });
+  seen.forEach((fam) => {
+    const item = el('span', 'cost-legend-item');
+    const sw = el('span', 'cost-swatch');
+    sw.style.background = famColor[fam] || css('--neutral-mark');
+    item.append(sw, document.createTextNode(
+      (state.data.method_families.find((f) => f.key === fam) || {}).label || fam));
+    legend.append(item);
+  });
+  host.append(legend);
+
+  const slowest = rows[rows.length - 1], fastest = rows[0];
+  const ratio = Math.round(slowest.time_ms / fastest.time_ms);
+  const anyRestricted = rows.some((r) => r.restricted_backbones);
+  note.textContent =
+    `${slowest.method_label} costs about ${ratio}× ${fastest.method_label}. ` +
+    (anyRestricted ? '† measured only on the backbones where the method applies. ' : '') +
+    'Timings are method-level; the hardware they were recorded on is not part ' +
+    'of the archived results.';
+}
+
 /* ═══════════════════════ dimension coverage ═══════════════════════ */
 
 function renderDimensions() {
@@ -660,6 +739,7 @@ async function main() {
   renderRanking();
   renderArchNav();
   renderArchDetail();
+  renderCost();
   renderDimensions();
 
   const commit = state.meta.git_commit ? state.meta.git_commit.slice(0, 8) : 'unknown';
