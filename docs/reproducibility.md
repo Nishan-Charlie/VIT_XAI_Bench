@@ -206,6 +206,7 @@ achievable and are not claimed.
 
 ```bash
 python scripts/build_results.py       # raw run summaries -> canonical records
+                                      #   + results/raw/computational_cost.csv
 python scripts/validate_results.py    # schema, ranges, duplicates, integrity
 python scripts/generate_figures.py    # -> figures/paper/*.{pdf,png}
 python scripts/export_web_data.py     # -> website/public/data/*.json
@@ -259,7 +260,7 @@ Stated plainly rather than papered over.
 | The 117 published records | **Re-derivable from `results/raw/benchmark_runs.csv`**, which is committed. | — |
 | Re-running the benchmark end to end | **Blocked without user-supplied data.** | ImageNet-S / VOC images are not redistributable. |
 | Per-image rows behind the archived summaries | **Not available.** | Only aggregated summaries survived; `results/<run>/results.json` files were never committed. |
-| Computational-cost dimension | **No data.** | The old runner discarded `time_ms` before aggregation. Fixed going forward. |
+| Computational-cost dimension | **Available** as method-level timings in `results/raw/computational_cost.csv`. | Per-`(model, method)` timings were discarded by the old runner. The current runner records `time_ms` and `peak_gpu_mb` per attribution, so a re-run fills the finer granularity. |
 | Dense-mask (EBPG) localisation | **No data in `results/`.** | `scripts/bench/ebpg_eval.py` writes `results/ebpg_results.json`, which was never committed. Needs a GPU re-run. |
 | Robustness / faithfulness *curves* | **Not available.** | Only aggregated scalars were stored; curves need a per-perturbation sweep. |
 | Explanation gallery images | **Available as static figures** (`figures/bench/qualitative_grid_cat.png`, `bench_qualitative.png`, `cam_upsampling_artifact.png`), shipped to the website by `scripts/export_web_assets.py`. | Regenerating them requires a GPU and pretrained weights; they are not derivable from the aggregated records. |

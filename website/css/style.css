@@ -463,3 +463,35 @@ pre code { font-family: inherit; font-size: inherit; }
 @media (max-width: 620px) {
   .dataset-facts > div { grid-template-columns: 1fr; gap: .1rem; }
 }
+
+/* ─────────────────────── computational cost chart ─────────────────── */
+
+.cost-chart { display: flex; flex-direction: column; gap: .4rem; }
+.cost-row {
+  display: grid; grid-template-columns: minmax(140px, 12rem) 1fr 5.5rem;
+  align-items: center; gap: 1rem;
+}
+.cost-name { font-size: .93rem; }
+.cost-dagger { color: var(--ink-3); margin-left: .2rem; cursor: help; }
+.cost-track {
+  background: var(--surface-sunk); height: 16px; border-radius: 3px;
+  overflow: hidden;
+}
+.cost-bar { height: 100%; border-radius: 3px; }
+.cost-value {
+  font-family: var(--font-mono); font-size: .84rem;
+  font-variant-numeric: tabular-nums; text-align: right; color: var(--ink);
+}
+.cost-legend {
+  display: flex; flex-wrap: wrap; gap: 1.1rem; margin-top: 1rem;
+  padding-top: .9rem; border-top: 1px solid var(--rule);
+  font-size: .82rem; color: var(--ink-2);
+}
+.cost-legend-item { display: inline-flex; align-items: center; gap: .4rem; }
+.cost-swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.cost-note { max-width: 74ch; margin: 1rem auto 0; text-align: center; }
+
+@media (max-width: 620px) {
+  .cost-row { grid-template-columns: 1fr 4.5rem; }
+  .cost-track { grid-column: 1 / -1; }
+}

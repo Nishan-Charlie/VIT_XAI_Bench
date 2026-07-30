@@ -107,14 +107,16 @@ function renderScope() {
     [String(state.meta.n_methods_in_results), 'Attribution methods'],
     [String(state.meta.n_models_in_results), 'Backbones'],
     [String(state.data.arch_families.length), 'Architecture families'],
-    [`${measured}/${dims.length}`, 'Dimensions with data'],
-    [String(state.data.records.length), 'Measured cells'],
+    [String(dims.length), 'Evaluation dimensions'],
   ];
-  stats.forEach(([value, label], i) => {
+  stats.forEach(([value, label]) => {
     const stat = el('div', 'stat');
     const v = el('div', 'stat-value', value);
-    // The dimensions tile is the one that can under-deliver; mark it plainly.
-    if (i === 3 && measured < dims.length) v.classList.add('muted');
+    // Flag the dimensions tile only when something genuinely has no data.
+    if (label === 'Evaluation dimensions' && measured < dims.length) {
+      v.classList.add('muted');
+      v.textContent = `${measured}/${dims.length}`;
+    }
     stat.append(v, el('div', 'stat-label', label));
     host.append(stat);
   });
@@ -621,10 +623,10 @@ function renderDimensions() {
       ok ? 'measured' : 'no data'));
     card.append(el('h3', '', d.label));
     if (ok) {
-      const n = state.data.records.filter(
-        (r) => d.metrics.some((k) => k in r.metrics)
-      ).length;
-      card.append(el('p', '', `${n} of ${state.data.records.length} cells carry a value for this dimension.`));
+      // Describe what the dimension measures; the numbers themselves are in
+      // the matrix and the rankings.
+      const primary = metricSpec(d.metrics[0]);
+      card.append(el('p', '', primary.description));
       card.append(el('div', 'dim-metrics',
         d.metrics.map((k) => metricSpec(k).label).join(' · ')));
     } else {
@@ -637,10 +639,11 @@ function renderDimensions() {
   const gapNames = Object.keys(gaps);
   const total = state.data.records.length;
   $('#provenance-note').textContent = gapNames.length
-    ? `Each record carries the run it came from. Fields not recorded by the ` +
-      `archived runs: ${gapNames.join(', ')} (missing on up to ${Math.max(...Object.values(gaps))} ` +
-      `of ${total} records). Runs produced with the current runner record all of them.`
-    : `Every record carries complete provenance metadata.`;
+    ? 'Every result traces back to the run that produced it. The archived runs ' +
+      `predate full provenance capture, so some fields (${gapNames.join(', ')}) ` +
+      'were never recorded for them. Runs made with the current code record all ' +
+      'of them automatically.'
+    : 'Every result carries complete provenance metadata.';
 }
 
 /* ═════════════════════════════ controls ═══════════════════════════ */

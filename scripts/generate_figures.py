@@ -54,6 +54,13 @@ FAMILY_COLOR = {
     "linear_attention": SERIES[4],
 }
 
+FAMILY_METHOD_COLOR = {
+    "gradient": SERIES[0],
+    "cam": SERIES[2],
+    "perturbation": SERIES[1],
+    "attention_lrp": "#16407a",
+}
+
 TRANSFORMER_FAMILIES = ("isotropic_vit", "hierarchical", "hybrid", "linear_attention")
 
 _SKIPPED: list[tuple] = []
@@ -376,6 +383,57 @@ def fig_metric_correlation(res: Results, out: Path, formats: list[str]) -> None:
     save(fig, out, "metric_correlation", formats)
 
 
+
+def fig_cost(out: Path, formats: list[str],
+             cost_path: Path | None = None) -> None:
+    """Fig 9 - attribution cost per method, log scale."""
+    cost_path = cost_path or (REPO_ROOT / "results" / "processed" / "method_cost.json")
+    if not cost_path.exists():
+        return skip("computational_cost", f"{cost_path} not found")
+    rows = json.loads(cost_path.read_text(encoding="utf-8")).get("methods", [])
+    if not rows:
+        return skip("computational_cost", "no attribution timings recorded")
+
+    rows = sorted(rows, key=lambda r: r["time_ms"])
+    labels = [r["method_label"] + (" †" if r.get("restricted_backbones") else "")
+              for r in rows]
+    values = [r["time_ms"] for r in rows]
+    colors = [FAMILY_METHOD_COLOR.get(r["method_family"], INK_MUTED) for r in rows]
+
+    fig, ax = plt.subplots(figsize=(7.2, 0.32 * len(rows) + 1.7))
+    y = np.arange(len(rows))
+    ax.barh(y, values, color=colors, height=0.72, zorder=3)
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels)
+    ax.invert_yaxis()
+    # Three orders of magnitude: a linear axis collapses every gradient method.
+    ax.set_xscale("log")
+    ax.set_xlabel("Time per explanation (ms, log scale)")
+    ax.xaxis.grid(True, which="both", zorder=0)
+    ax.set_axisbelow(True)
+
+    for yi, v in zip(y, values, strict=True):
+        text = f"{v/1000:.2f} s" if v >= 1000 else f"{v:.1f} ms"
+        ax.text(v * 1.12, yi, text, va="center", fontsize=7, color=INK_SECONDARY)
+    ax.set_xlim(right=max(values) * 3)
+
+    handles = [
+        plt.Rectangle((0, 0), 1, 1, color=FAMILY_METHOD_COLOR[f])
+        for f in taxonomy.METHOD_FAMILIES if any(r["method_family"] == f for r in rows)
+    ]
+    names = [taxonomy.METHOD_FAMILY_LABELS[f] for f in taxonomy.METHOD_FAMILIES
+             if any(r["method_family"] == f for r in rows)]
+    ax.legend(handles, names, loc="upper center", bbox_to_anchor=(0.5, -0.16),
+              ncol=4, fontsize=7.5)
+
+    ratio = values[-1] / values[0]
+    ax.set_title(f"Cost of one explanation — {rows[-1]['method_label']} is "
+                 f"~{ratio:.0f}x {rows[0]['method_label']}")
+    fig.text(0.5, -0.12, "† measured only on backbones where the method applies",
+             ha="center", fontsize=7, color=INK_MUTED)
+    save(fig, out, "computational_cost", formats)
+
+
 def fig_coverage(res: Results, out: Path, formats: list[str]) -> None:
     """An honesty figure: exactly which cells the benchmark measured."""
     metrics = list(taxonomy.METRICS)
@@ -435,6 +493,7 @@ def main() -> int:
     fig_transfer(res, args.out, args.formats)
     fig_family_performance(res, args.out, args.formats)
     fig_metric_correlation(res, args.out, args.formats)
+    fig_cost(args.out, args.formats)
     fig_coverage(res, args.out, args.formats)
 
     # Figures the paper describes but the current results cannot support.
@@ -443,12 +502,6 @@ def main() -> int:
              "dense-mask localisation (EBPG / dense pointing game) is not in "
              "results/processed/records.json. Produce it with "
              "scripts/bench/ebpg_eval.py, then rebuild the records.")
-    if not any(m.startswith("time") or "cost" in m for m in taxonomy.METRICS
-               if res.has_metric(m)):
-        skip("computational_cost",
-             "no runtime/memory columns in the results. The current runner "
-             "records time_ms and peak_gpu_mb, but the archived runs predate "
-             "that, so no cost numbers exist to plot.")
     skip("robustness_curves",
          "results store only aggregated max-sensitivity, not per-perturbation-"
          "magnitude curves. A sweep over perturbation strength is required.")
