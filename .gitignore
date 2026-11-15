@@ -58,3 +58,9 @@ RESEARCH_PLAN.md
 
 # Notebooks are dev artifacts, not part of the published benchmark
 *.ipynb
+
+# NEUCOM revision outputs (per-image CSVs and analysis; the map cache is regenerable)
+!results/revision_neucom/
+results/revision_neucom/maps/
+!results/revision_vit_native/
+!results/revision_gradshap_fill/
