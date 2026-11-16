@@ -11,7 +11,6 @@ Produces (figures/):
 Same Okabe-Ito family palette as benchmark_figures.py (validated CVD-safe);
 every figure direct-labels methods, so color is never the only identity carrier.
 """
-import csv
 import os
 
 import matplotlib
@@ -19,7 +18,7 @@ import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 os.makedirs("figures", exist_ok=True)
 
