@@ -39,9 +39,7 @@ def load_records(path: Path) -> tuple[list[ResultRecord], str]:
     records = []
     for raw in payload.get("records", []):
         metrics = {
-            key: MetricValue(
-                mean=val.get("mean"), std=val.get("std"), count=val.get("count")
-            )
+            key: MetricValue.from_dict(val)
             for key, val in (raw.get("metrics") or {}).items()
         }
         prov_raw = raw.get("provenance") or {}

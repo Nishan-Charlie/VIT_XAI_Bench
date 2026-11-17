@@ -114,3 +114,48 @@ def test_provenance_reports_missing_fields():
     assert "git_commit" in missing
     assert "source_run" not in missing
     assert "seed" not in missing
+
+
+# ── schema 1.1: cell statistic, median and unbounded cells ─────────────────────
+
+def _ms(**kw) -> ResultRecord:
+    return ResultRecord(model="vit_base_patch16_224", method="grad_cam_plus_plus",
+                        metrics={"max_sensitivity": MetricValue(**kw)})
+
+
+def test_median_cell_reports_the_median():
+    mv = MetricValue(mean=None, median=2.9, statistic="median", count=100, n_undefined=12)
+    assert mv.value == 2.9
+    assert validate_record(_ms(mean=None, median=2.9, statistic="median", count=100)) == []
+
+
+def test_unbounded_median_is_infinite_and_serialises_without_infinity():
+    mv = MetricValue(mean=None, statistic="median", unbounded=True, count=50, n_undefined=40)
+    assert mv.value == float("inf")
+    payload = mv.to_dict()
+    assert payload["value"] is None and payload["unbounded"] is True
+    assert MetricValue.from_dict(payload).value == float("inf")
+    assert validate_record(_ms(mean=None, statistic="median", unbounded=True, count=50)) == []
+
+
+def test_only_an_unbounded_metric_can_be_infinite():
+    rec = ResultRecord(model="resnet50", method="grad_cam", metrics={
+        "pointing_game": MetricValue(mean=None, statistic="median", unbounded=True)})
+    assert any("only the median of an unbounded metric" in p for p in validate_record(rec))
+
+
+def test_a_mean_cell_needs_a_finite_mean():
+    rec = ResultRecord(model="resnet50", method="grad_cam",
+                       metrics={"pointing_game": MetricValue(mean=None, median=1.0)})
+    assert any("mean is not a number" in p for p in validate_record(rec))
+
+
+def test_more_undefined_images_than_images_is_rejected():
+    rec = ResultRecord(model="resnet50", method="grad_cam",
+                       metrics={"pointing_game": MetricValue(0.5, count=10, n_undefined=11)})
+    assert any("undefined images" in p for p in validate_record(rec))
+
+
+def test_schema_1_0_records_still_load():
+    mv = MetricValue.from_dict({"mean": 0.8, "std": 0.1, "count": 50})
+    assert mv.value == 0.8 and mv.statistic == "mean" and not mv.unbounded

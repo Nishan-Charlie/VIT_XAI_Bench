@@ -33,6 +33,7 @@ import numpy as np  # noqa: E402
 from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm  # noqa: E402
 
 from xai_bench import taxonomy  # noqa: E402
+from xai_bench.results_schema import MetricValue  # noqa: E402
 
 # ── design tokens (validated categorical palette; see dataviz/references) ────
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"]
@@ -121,14 +122,16 @@ class Results:
         self.methods = [m for m in taxonomy.METHODS if any(r["method"] == m for r in records)]
 
     def value(self, model: str, method: str, metric: str) -> float | None:
+        """The cell value (median for Max-Sensitivity, mean otherwise); inf for a
+        cell the method fails on at least half the images of."""
         rec = self.by_cell.get((model, method))
         if not rec:
             return None
         mv = rec.get("metrics", {}).get(metric)
-        return mv.get("mean") if mv else None
+        return MetricValue.from_dict(mv).value if mv else None
 
     def matrix(self, metric: str) -> np.ndarray:
-        """[method x model] matrix of means, NaN where not measured."""
+        """[method x model] matrix of cell values, NaN where not measured."""
         return np.array([
             [self.value(mo, me, metric) if self.value(mo, me, metric) is not None else np.nan
              for mo in self.models]
@@ -151,8 +154,9 @@ def load(records_path: Path) -> Results:
 
 def fig_heatmaps(res: Results, out: Path, formats: list[str]) -> None:
     """Fig 1 — Architecture x Attribution heatmap, one panel per metric."""
-    metrics = [m for m in ("pointing_game", "faithfulness_correlation",
-                           "max_sensitivity", "sparseness") if res.has_metric(m)]
+    metrics = [m for m in ("pointing_game", "ebpg", "faithfulness_correlation",
+                           "faithfulness_estimate", "max_sensitivity", "sparseness")
+               if res.has_metric(m)]
     if not metrics:
         return skip("architecture_method_heatmap", "no metrics present in results")
 
@@ -167,8 +171,10 @@ def fig_heatmaps(res: Results, out: Path, formats: list[str]) -> None:
             skip(f"heatmap_{metric}", "metric present but all values missing")
             continue
 
-        im = ax.imshow(mat, cmap=SEQ_CMAP, aspect="auto",
-                       vmin=float(np.nanmin(mat)), vmax=float(np.nanmax(mat)))
+        # An unbounded cell (Max-Sensitivity) takes the colour of the worst value.
+        lo, hi = float(finite.min()), float(finite.max())
+        shown = np.where(np.isinf(mat), hi, mat)
+        im = ax.imshow(shown, cmap=SEQ_CMAP, aspect="auto", vmin=lo, vmax=hi)
 
         ax.set_xticks(range(len(res.models)))
         ax.set_xticklabels([taxonomy.MODELS[m].label for m in res.models],
@@ -177,11 +183,14 @@ def fig_heatmaps(res: Results, out: Path, formats: list[str]) -> None:
         ax.set_yticklabels([taxonomy.METHODS[m].label for m in res.methods])
 
         # Cell values, with contrast-aware ink so the number is always legible.
-        lo, hi = float(np.nanmin(mat)), float(np.nanmax(mat))
         rng = (hi - lo) or 1.0
         for i in range(mat.shape[0]):
             for j in range(mat.shape[1]):
                 v = mat[i, j]
+                if np.isinf(v):
+                    ax.text(j, i, "∞", ha="center", va="center", fontsize=8,
+                            color="#ffffff")
+                    continue
                 if not np.isfinite(v):
                     ax.text(j, i, "–", ha="center", va="center",
                             color=INK_MUTED, fontsize=7)
@@ -207,8 +216,13 @@ def fig_heatmaps(res: Results, out: Path, formats: list[str]) -> None:
         cb = fig.colorbar(im, ax=ax, fraction=0.024, pad=0.015)
         cb.outline.set_visible(False)
         cb.ax.tick_params(labelsize=7, length=0)
-        fig.text(0.5, -0.02, "– = not measured", ha="center",
-                 fontsize=7, color=INK_MUTED)
+        stat = "median" if any(
+            (r["metrics"].get(metric) or {}).get("statistic") == "median"
+            for r in res.records) else "mean"
+        note = f"cells: {stat} over all images · – = not measured"
+        if np.isinf(mat).any():
+            note += " · ∞ = fails on at least half the images"
+        fig.text(0.5, -0.02, note, ha="center", fontsize=7, color=INK_MUTED)
         save(fig, out, f"heatmap_{metric}", formats)
 
 
@@ -345,7 +359,8 @@ def fig_metric_correlation(res: Results, out: Path, formats: list[str]) -> None:
     pairs = np.zeros((n, n), dtype=int)
     for i in range(n):
         for j in range(n):
-            mask = np.isfinite(arr[i]) & np.isfinite(arr[j])
+            # an unbounded (inf) cell is measured: it ranks as the largest value
+            mask = ~np.isnan(arr[i]) & ~np.isnan(arr[j])
             pairs[i, j] = int(mask.sum())
             if mask.sum() >= 4:
                 a = arr[i][mask].argsort().argsort()      # Spearman via ranks
@@ -497,11 +512,11 @@ def main() -> int:
     fig_coverage(res, args.out, args.formats)
 
     # Figures the paper describes but the current results cannot support.
-    if not res.has_metric("pointing_game_dense"):
-        skip("bbox_vs_dense_mask",
-             "dense-mask localisation (EBPG / dense pointing game) is not in "
-             "results/processed/records.json. Produce it with "
-             "scripts/bench/ebpg_eval.py, then rebuild the records.")
+    if not res.has_metric("ebpg"):
+        skip("heatmap_ebpg",
+             "dense-mask localisation (EBPG) is not in results/processed/records.json. "
+             "Produce it with scripts/revision_neucom/loc.py and analyze_revision.py, "
+             "then rebuild the records.")
     skip("robustness_curves",
          "results store only aggregated max-sensitivity, not per-perturbation-"
          "magnitude curves. A sweep over perturbation strength is required.")

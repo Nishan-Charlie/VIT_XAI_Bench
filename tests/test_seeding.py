@@ -38,7 +38,7 @@ def test_derive_seed_in_valid_numpy_range():
 
 
 def test_derive_seed_is_stable_across_processes():
-    """Python's str hash is randomised per process; blake2b must not be.
+    """Python's str hash is randomised per process; crc32 must not be.
 
     A per-process-varying seed would make results depend on the interpreter
     instance, silently breaking reproducibility across machines and restarts.
