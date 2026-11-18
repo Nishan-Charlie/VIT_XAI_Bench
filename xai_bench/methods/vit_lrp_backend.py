@@ -32,6 +32,11 @@ from typing import Any
 
 import torch
 import torch.nn as nn
+
+# must precede the LXT imports: restores a transformers symbol that LXT imports
+from xai_bench.utils import transformers_compat  # noqa: F401
+
+# isort: split
 from lxt.efficient.core import monkey_patch
 from lxt.efficient.patches import layer_norm_forward, non_linear_forward, patch_method
 from lxt.efficient.rules import divide_gradient
