@@ -82,8 +82,8 @@ Three independent guards:
 1. **`scripts/check_excluded_methods.py`** scans the files the repository
    actually publishes (`git ls-files`) for `hilrp` / `hi-lrp` / `hi_lrp`, and
    exits non-zero on any hit. A short allow-list covers the files that name the
-   method *in order to document its removal* — this record, the README's
-   integrity section, the quarantine notice, and the exclusion logic itself.
+   method *in order to document its removal* — this record, the
+   quarantine notice, and the exclusion logic itself.
 2. **`scripts/validate_results.py`** rejects any record whose provenance traces
    to an excluded run.
 3. **`tests/test_excluded_methods.py`** asserts the guard catches every spelling
