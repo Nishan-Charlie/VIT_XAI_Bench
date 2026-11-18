@@ -38,6 +38,7 @@ import subprocess
 import sys
 import time
 
+import psutil
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -285,12 +286,9 @@ def reset(_args):
             o = {}
         if o.get("host") != host:
             continue              # reserved for, or claimed on, another machine
-        if o.get("pid"):
-            try:
-                os.kill(o["pid"], 0)
-                continue          # worker alive: keep the claim
-            except OSError:
-                pass
+        if o.get("pid") and psutil.pid_exists(o["pid"]):
+            continue              # worker alive: keep the claim (os.kill(pid, 0) would
+                                  # terminate the process on Windows)
         os.rename(os.path.join(cdir, c), os.path.join(cdir, c + f".released.{int(time.time())}"))
         print("released", c)
 
