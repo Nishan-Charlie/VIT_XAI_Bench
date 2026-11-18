@@ -23,6 +23,9 @@ usage (from the repository root):
   python scripts/revision_neucom/queue_500.py worker --gpu 0 --name g0a [--threads 4]
   python scripts/revision_neucom/queue_500.py status
   python scripts/revision_neucom/queue_500.py reset     # drop claims of dead workers
+  python scripts/revision_neucom/queue_500.py reserve --jobs REGEX --owner NAME
+      # mark jobs as run elsewhere (another machine with its own queue directory,
+      # whose worker is started with the same --jobs REGEX); workers here skip them
   touch results/queue_500/STOP                           # workers stop after their job
 """
 import argparse
@@ -184,8 +187,12 @@ def run_job(job, gpu, threads, log):
             fh.write(f"\n=== attempt {attempt} on gpu {gpu}, {time.strftime('%Y-%m-%d %H:%M:%S')}: "
                      f"{' '.join(job['cmd'])}\n")
             fh.flush()
-            rc = subprocess.call(job["cmd"], stdout=fh, stderr=subprocess.STDOUT, env=env,
-                                 preexec_fn=lambda: os.nice(10))
+            if os.name == "nt":   # below-normal priority on Windows
+                rc = subprocess.call(job["cmd"], stdout=fh, stderr=subprocess.STDOUT, env=env,
+                                     creationflags=0x00004000)
+            else:
+                rc = subprocess.call(job["cmd"], stdout=fh, stderr=subprocess.STDOUT, env=env,
+                                     preexec_fn=lambda: os.nice(10))
         if rc == 0 and attempt_ok(job, before):
             return True, time.time() - t0, attempt
         with open(log, "a", encoding="utf-8") as fh:
@@ -202,7 +209,7 @@ def worker(args):
         if os.path.exists(os.path.join(Q, "STOP")):
             print(f"[{args.name}] STOP file found, exiting", flush=True)
             return
-        J = jobs()
+        J = [j for j in jobs() if not args.jobs or re.search(args.jobs, j["name"])]
         open_jobs = [j for j in J if not is_done(j["name"]) and not is_failed(j["name"])]
         if not open_jobs:
             print(f"[{args.name}] no jobs left, exiting", flush=True)
@@ -276,7 +283,9 @@ def reset(_args):
                 o = json.load(fh)
         except OSError:
             o = {}
-        if o.get("host") == host and o.get("pid"):
+        if o.get("host") != host:
+            continue              # reserved for, or claimed on, another machine
+        if o.get("pid"):
             try:
                 os.kill(o["pid"], 0)
                 continue          # worker alive: keep the claim
@@ -286,6 +295,21 @@ def reset(_args):
         print("released", c)
 
 
+def reserve(args):
+    os.makedirs(os.path.join(Q, "claims"), exist_ok=True)
+    for j in jobs():
+        if re.search(args.jobs, j["name"]) and not is_done(j["name"]):
+            try:
+                os.mkdir(path("claims", j["name"]))
+            except FileExistsError:
+                print("already claimed", j["name"])
+                continue
+            with open(os.path.join(path("claims", j["name"]), "owner.json"), "w") as fh:
+                json.dump(dict(host=args.owner, pid=None, worker=args.owner, gpu="-", job=j["name"],
+                               start=time.time()), fh)
+            print("reserved", j["name"], "for", args.owner)
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -293,7 +317,11 @@ if __name__ == "__main__":
     w.add_argument("--gpu", type=int, required=True)
     w.add_argument("--name", required=True)
     w.add_argument("--threads", type=int, default=4)
+    w.add_argument("--jobs", default="", help="regex: only run the jobs whose name matches")
     sub.add_parser("status")
     sub.add_parser("reset")
+    r = sub.add_parser("reserve")
+    r.add_argument("--jobs", required=True)
+    r.add_argument("--owner", required=True)
     a = ap.parse_args()
-    {"worker": worker, "status": status, "reset": reset}[a.cmd](a)
+    {"worker": worker, "status": status, "reset": reset, "reserve": reserve}[a.cmd](a)
