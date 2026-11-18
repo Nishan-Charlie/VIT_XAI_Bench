@@ -101,11 +101,11 @@ a:hover { color: var(--link-dark); text-decoration: underline; }
 .authors { font-size: 1.18rem; margin: 0 0 .35rem; line-height: 1.9; }
 .authors a { color: var(--link); }
 .authors sup { font-size: .68em; }
-.affiliations { font-size: 1.02rem; color: var(--ink); margin: 0 0 1.6rem; line-height: 1.7; }
-.affiliations sup { font-size: .68em; }
-.affiliation-todo {
-  font-size: .84rem; color: var(--ink-3); font-style: italic;
+.affiliations {
+  list-style: none; padding: 0; margin: 0 0 1.6rem;
+  font-size: .95rem; color: var(--ink-2); line-height: 1.6;
 }
+.affiliations sup { font-size: .68em; margin-right: .15em; }
 
 .link-buttons {
   list-style: none; margin: 0 0 1rem; padding: 0;
