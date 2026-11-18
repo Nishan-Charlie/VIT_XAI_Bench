@@ -1,0 +1,61 @@
+# NEUCOM revision: the five-metric grid (Tables PG, FC, FE, MS, SP) on the first
+# 500 of the 1,000 evaluation images, for all eight backbones and every method.
+# Supersedes revision_grid_seeded{,_50}.yaml (first 100 images for RN-50 and
+# ViT-B/16, first 50 for the other six). The 1,000-image cache starts with the
+# same 100 images, and every (model, method, image) evaluation is seeded from
+# xai_bench.runner.evaluation_seed, so the rows on the shared images can be
+# compared with the earlier runs.
+#
+# scripts/revision_neucom/queue_500.py splits this sweep into one run per
+# (backbone, method group) so it can be spread over several GPUs; the merged
+# rows are those of running this file as a whole. AttnLRP (ViT-B/16 only) runs
+# in its own process: revision_grid_500_attnlrp.yaml.
+
+models:
+  - "resnet50"
+  - "vit_base_patch16_224"
+  - "swin_base_patch4_window7_224"
+  - "pvt_v2_b2"
+  - "maxvit_small_tf_224"
+  - "mobilevitv2_100"
+  - "efficientvit_b1"
+  - "efficientvit_b2"
+
+methods:
+  - "saliency"
+  - "integrated_gradients"
+  - "smoothgrad"
+  - "input_x_gradient"
+  - "vargrad"
+  - "gradient_shap"
+  - "grad_cam"
+  - "grad_cam_plus_plus"
+  - "attention_rollout" # ViT-B/16 only (limit_methods_to_supported)
+  - "lime"
+  - "occlusion"
+  - "rise"
+
+metrics:
+  - "faithfulness_correlation"
+  - "faithfulness_estimate"
+  - "pointing_game"
+  - "max_sensitivity"
+  - "sparseness"
+
+metric_kwargs:
+  faithfulness_correlation:
+    { nr_runs: 20, subset_size: 224, return_aggregate: false }
+  faithfulness_estimate: { features_in_step: 448, return_aggregate: false }
+  max_sensitivity: { nr_samples: 3, lower_bound: 0.2 }
+
+dataset: "imagenets_cached"
+dataset_kwargs:
+  { cache_path: "data/ImageNetS/cache_validation_1000_v2.pt", num_samples: 500 }
+num_images: 500
+seeds: [0]
+device: "auto"
+input_size: 224
+output_dir: "results"
+run_name: "revision_grid_500"
+save_saliency: false
+limit_methods_to_supported: true
