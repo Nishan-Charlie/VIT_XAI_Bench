@@ -38,6 +38,7 @@ results/*
 !results/README.md
 results/raw/*
 !results/raw/benchmark_runs.csv
+!results/raw/computational_cost.csv
 results/**/results.json
 results/**/results.csv
 
@@ -64,3 +65,11 @@ RESEARCH_PLAN.md
 results/revision_neucom/maps/
 !results/revision_vit_native/
 !results/revision_gradshap_fill/
+
+# The seeded five-metric grid that records.json is built from, with its per-image
+# rows, so that the scoring of every image can be checked (results.json duplicates
+# results.csv and stays untracked).
+!results/revision_grid_seeded/
+!results/revision_grid_seeded_attnlrp/
+!results/revision_grid_seeded_50/
+!results/revision_grid_seeded*/results.csv

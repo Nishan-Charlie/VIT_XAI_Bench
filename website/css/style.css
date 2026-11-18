@@ -66,6 +66,8 @@ a:hover { color: var(--link-dark); text-decoration: underline; }
   width: 1px !important; height: 1px !important;
   padding: 0 !important; margin: -1px !important; border: 0 !important;
   overflow: hidden !important; clip: rect(0 0 0 0); white-space: nowrap;
+  /* a table ignores width: 1px and would widen the page on a phone */
+  display: block !important;
 }
 .skip-link { position: absolute; left: -9999px; top: 0; z-index: 100;
   background: var(--button); color: #fff; padding: .7rem 1.1rem; }

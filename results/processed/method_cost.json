@@ -1,95 +1,95 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "methods": [
     {
-      "method": "smoothgrad",
-      "method_label": "SmoothGrad",
+      "method": "attention_rollout",
+      "method_label": "Attention Rollout",
+      "method_family": "attention_lrp",
+      "time_ms": 12.4,
+      "restricted_backbones": true
+    },
+    {
+      "method": "saliency",
+      "method_label": "Saliency",
       "method_family": "gradient",
-      "time_ms": 20.9,
+      "time_ms": 27.1,
       "restricted_backbones": false
     },
     {
       "method": "input_x_gradient",
       "method_label": "Input \u00d7 Gradient",
       "method_family": "gradient",
-      "time_ms": 22.1,
+      "time_ms": 27.8,
       "restricted_backbones": false
     },
     {
       "method": "grad_cam_plus_plus",
       "method_label": "Grad-CAM++",
       "method_family": "cam",
-      "time_ms": 24.0,
+      "time_ms": 35.1,
       "restricted_backbones": false
     },
     {
       "method": "grad_cam",
       "method_label": "Grad-CAM",
       "method_family": "cam",
-      "time_ms": 26.5,
+      "time_ms": 35.9,
       "restricted_backbones": false
     },
     {
-      "method": "saliency",
-      "method_label": "Saliency",
+      "method": "smoothgrad",
+      "method_label": "SmoothGrad",
       "method_family": "gradient",
-      "time_ms": 31.9,
-      "restricted_backbones": false
-    },
-    {
-      "method": "gradient_shap",
-      "method_label": "GradientSHAP",
-      "method_family": "gradient",
-      "time_ms": 32.7,
+      "time_ms": 135.4,
       "restricted_backbones": false
     },
     {
       "method": "vargrad",
       "method_label": "VarGrad",
       "method_family": "gradient",
-      "time_ms": 40.4,
+      "time_ms": 137.1,
       "restricted_backbones": false
     },
     {
-      "method": "attention_rollout",
-      "method_label": "Attention Rollout",
-      "method_family": "attention_lrp",
-      "time_ms": 41.0,
-      "restricted_backbones": true
+      "method": "gradient_shap",
+      "method_label": "GradientSHAP",
+      "method_family": "gradient",
+      "time_ms": 139.0,
+      "restricted_backbones": false
     },
     {
       "method": "attnlrp",
       "method_label": "AttnLRP",
       "method_family": "attention_lrp",
-      "time_ms": 57.4,
+      "time_ms": 208.8,
       "restricted_backbones": true
     },
     {
       "method": "integrated_gradients",
       "method_label": "Integrated Gradients",
       "method_family": "gradient",
-      "time_ms": 479.6,
-      "restricted_backbones": false
-    },
-    {
-      "method": "rise",
-      "method_label": "RISE",
-      "method_family": "perturbation",
-      "time_ms": 669.9,
+      "time_ms": 428.1,
       "restricted_backbones": false
     },
     {
       "method": "lime",
       "method_label": "LIME",
       "method_family": "perturbation",
-      "time_ms": 1488.1,
+      "time_ms": 1344.4,
+      "restricted_backbones": false
+    },
+    {
+      "method": "rise",
+      "method_label": "RISE",
+      "method_family": "perturbation",
+      "time_ms": 2236.2,
       "restricted_backbones": false
     },
     {
       "method": "occlusion",
       "method_label": "Occlusion",
       "method_family": "perturbation",
-      "time_ms": 11011.1,
+      "time_ms": 9892.0,
       "restricted_backbones": false
     }
   ]

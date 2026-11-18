@@ -2,12 +2,16 @@
 
 | Path | What it is | Tracked |
 |---|---|---|
-| `raw/benchmark_runs.csv` | Aggregated per-run summaries, the input to the pipeline. | yes |
+| `revision_grid_seeded/`, `revision_grid_seeded_attnlrp/`, `revision_grid_seeded_50/` | The five-metric grid of the paper, seeded, every image scored: `config.json`, `summary.csv`, `failures.json` and the per-image `results.csv`. | yes |
+| `revision_neucom/` | The revision analyses (localisation and EBPG, multi-seed robustness, Grad-CAM++ diagnostics, accuracy, timing), per image, and their tables in `analysis/`. | yes |
+| `revision_vit_native/`, `revision_gradshap_fill/` | Earlier revision runs, superseded by the seeded grid; kept for the response to the reviewers. | yes |
+| `raw/computational_cost.csv` | Mean time per explanation per method (the paper's cost table). | yes |
+| `raw/benchmark_runs.csv` | The July 2026 summaries: unseeded, undefined images left out, mean Max-Sensitivity. Superseded; kept for the record. | yes |
 | `processed/records.json` | Canonical, validated `(model, method)` records. Figures and the website read this. | yes |
 | `processed/manifest.json` | Coverage matrix, provenance gaps, validation report. | yes |
-| `<run_name>/` | Raw output of an individual benchmark run. | no (gitignored) |
+| `<run_name>/` | Output of any other run. | no (gitignored) |
 
-Rebuild `processed/` from `raw/`:
+Rebuild `processed/` from the grid runs and the EBPG analysis:
 
 ```bash
 python scripts/build_results.py

@@ -10,6 +10,12 @@ Nothing is hardcoded in the frontend. Dimensions with no measurement are
 exported with ``"status": "not_available"`` and a reason, so the UI can say so
 explicitly instead of showing a blank or an invented number.
 
+Every cell is its metric's cell statistic (the median for Max-Sensitivity, the
+mean otherwise; xai_bench/scoring.py), and a ranking over several backbones
+aggregates the cells with the same statistic. A Max-Sensitivity cell is infinite
+when the method fails on at least half of the images; JSON has no infinity, so
+such a value is written as ``null`` with ``"unbounded": true``.
+
 Outputs (website/public/data/):
     benchmark.json   models, methods, metrics, records, rankings, coverage
     meta.json        build provenance and dataset-level counts
@@ -19,16 +25,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
-from statistics import mean, pstdev
+from statistics import mean, median, pstdev
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from xai_bench import taxonomy  # noqa: E402
-from xai_bench.results_schema import SCHEMA_VERSION  # noqa: E402
+from xai_bench.results_schema import SCHEMA_VERSION, MetricValue  # noqa: E402
+from xai_bench.scoring import cell_statistic  # noqa: E402
 from xai_bench.utils import provenance  # noqa: E402
 
 DEFAULT_RECORDS = REPO_ROOT / "results" / "processed" / "records.json"
@@ -40,8 +48,23 @@ TRANSFORMER_FAMILIES = ("isotropic_vit", "hierarchical", "hybrid", "linear_atten
 
 
 def _val(rec: dict, metric: str) -> float | None:
+    """The cell value, ``math.inf`` for an unbounded cell, None if not measured."""
     mv = (rec.get("metrics") or {}).get(metric)
-    return mv.get("mean") if mv else None
+    return MetricValue.from_dict(mv).value if mv else None
+
+
+def _aggregate(vals: list[float], metric: str) -> float:
+    """Combine cells with the metric's own statistic (median for Max-Sensitivity)."""
+    return median(vals) if cell_statistic(metric) == "median" else mean(vals)
+
+
+def _json_number(row: dict, key: str) -> None:
+    """Replace an infinite value by null plus ``<key>_unbounded``, in place."""
+    v = row.get(key)
+    unbounded = v is not None and math.isinf(v)
+    if unbounded:
+        row[key] = None
+    row[f"{key}_unbounded" if key != "value" else "unbounded"] = unbounded
 
 
 def build_rankings(records: list[dict], metric: str) -> dict:
@@ -60,11 +83,14 @@ def build_rankings(records: list[dict], metric: str) -> dict:
             vals = [v for v in vals if v is not None]
             if not vals:
                 continue
+            finite = all(math.isfinite(v) for v in vals)
             rows.append({
                 "method": method,
-                "value": mean(vals),
-                "std": pstdev(vals) if len(vals) > 1 else 0.0,
+                "value": _aggregate(vals, metric),
+                "statistic": cell_statistic(metric),
+                "std": (pstdev(vals) if len(vals) > 1 else 0.0) if finite else None,
                 "n_models": len(vals),
+                "n_unbounded": sum(1 for v in vals if math.isinf(v)),
             })
         higher = taxonomy.METRICS[metric].higher_is_better
         rows.sort(key=lambda r: r["value"], reverse=higher)
@@ -89,22 +115,46 @@ def build_rankings(records: list[dict], metric: str) -> dict:
 
 
 def build_transfer(records: list[dict], metric: str) -> list[dict]:
-    """CNN rank vs transformer rank per method — the paper's central question."""
+    """CNN rank vs transformer rank per method — the paper's central question.
+
+    Both sides rank only the methods measured on both: the attention methods exist
+    on the isotropic ViT alone and would otherwise shift every transformer rank. An
+    exact tie on one side is broken by the order on the other side, so a tie never
+    counts as a change of rank.
+    """
     rankings = build_rankings(records, metric)
     cnn = {r["method"]: r for r in rankings.get("cnn_only", [])}
     tfm = {r["method"]: r for r in rankings.get("transformer_only", [])}
+    common = sorted(set(cnn) & set(tfm))
+    sign = -1.0 if taxonomy.METRICS[metric].higher_is_better else 1.0
+
+    def order(first: dict, second: dict) -> dict:
+        ranked = sorted(common, key=lambda m: (sign * first[m]["value"], sign * second[m]["value"], m))
+        return {m: i + 1 for i, m in enumerate(ranked)}
+
+    cnn_rank, tfm_rank = order(cnn, tfm), order(tfm, cnn)
     out = []
-    for method in sorted(set(cnn) & set(tfm)):
+    for method in common:
         out.append({
             "method": method,
-            "cnn_rank": cnn[method]["rank"],
-            "transformer_rank": tfm[method]["rank"],
+            "cnn_rank": cnn_rank[method],
+            "transformer_rank": tfm_rank[method],
             "cnn_value": cnn[method]["value"],
             "transformer_value": tfm[method]["value"],
-            "rank_delta": tfm[method]["rank"] - cnn[method]["rank"],
+            "rank_delta": tfm_rank[method] - cnn_rank[method],
         })
     out.sort(key=lambda r: r["cnn_rank"])
+    for row in out:
+        _json_number(row, "cnn_value")
+        _json_number(row, "transformer_value")
     return out
+
+
+def _json_rankings(scopes: dict) -> dict:
+    for rows in scopes.values():
+        for row in rows:
+            _json_number(row, "value")
+    return scopes
 
 
 def main() -> int:
@@ -152,13 +202,7 @@ def main() -> int:
                 "label": dim.replace("_", " ").title(),
                 "metrics": [],
                 "status": "not_available",
-                "reason": (
-                    "The archived benchmark runs did not record runtime or GPU "
-                    "memory. The current runner does (time_ms, peak_gpu_mb), so "
-                    "re-running the benchmark will populate this dimension."
-                    if dim == "computational_cost"
-                    else "No metric for this dimension is present in the results."
-                ),
+                "reason": "No metric for this dimension is present in the results.",
             })
 
     data = {
@@ -185,6 +229,7 @@ def main() -> int:
             {
                 "key": s.key, "label": s.label, "dimension": s.dimension,
                 "higher_is_better": s.higher_is_better,
+                "statistic": cell_statistic(s.key),
                 "range": list(s.value_range) if s.value_range else None,
                 "description": s.description,
                 "measured": s.key in measured_metrics,
@@ -201,7 +246,7 @@ def main() -> int:
         ],
         "dimensions": dimensions,
         "records": records,
-        "rankings": {m: build_rankings(records, m) for m in measured_metrics},
+        "rankings": {m: _json_rankings(build_rankings(records, m)) for m in measured_metrics},
         "transfer": {m: build_transfer(records, m) for m in measured_metrics},
         "cost": cost,
         "coverage": manifest.get("metric_coverage", {}),
@@ -209,7 +254,9 @@ def main() -> int:
     }
 
     args.out.mkdir(parents=True, exist_ok=True)
-    (args.out / "benchmark.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
+    # allow_nan=False: the browser's JSON parser rejects NaN and Infinity.
+    (args.out / "benchmark.json").write_text(
+        json.dumps(data, indent=2, allow_nan=False), encoding="utf-8")
 
     prov = provenance.collect()
     meta = {

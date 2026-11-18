@@ -42,7 +42,8 @@ and those must not be removed along with HiLRP:
 
 * **AttnLRP** (Achtibat et al., 2024) — registered as `attnlrp`, has results in
   the benchmark, and is one of the evaluated methods.
-* **CP-LRP** — the detached-softmax variant, also from the literature.
+* **CP-LRP** — the detached-softmax variant, also from the literature (not part
+  of the published grid).
 
 Both were implemented inside the `hilrp/` package directory (`vit_lxt.py`) even
 though neither is HiLRP. That code was extracted into
@@ -95,28 +96,32 @@ CI runs all three in the `results-integrity` job.
 
 ## 2. Corrected defects that can change reported numbers
 
-The audit found defects that affect values, not just ergonomics. They are fixed
-in the current code, but **the published result set in `results/` was produced
-by the previous code** and therefore still carries their effects. Re-running the
-benchmark is required for the numbers to reflect the fixes.
+The July 2026 audit and the November 2026 revision found defects that affect
+values, not just ergonomics. All are fixed in the current code, and **the
+published result set was produced again with it**: the five-metric grid in
+`results/revision_grid_seeded*/` and the localisation, robustness and CAM
+analyses in `results/revision_neucom/`. The July summaries, which carry the
+effects of §2.1–2.3 and §2.5, stay in `results/raw/benchmark_runs.csv` for the
+record only; no figure, table or web page is built from them.
 
 ### 2.1 The random seed was never applied (highest severity)
 
 `xai_bench/utils/seed.py` defined `set_seed()` and `RunConfig` carried a `seeds`
-field, but **no code path ever called it**. Six evaluated methods sample
-internally — SmoothGrad, VarGrad, GradientSHAP, RISE, LIME — as does the
-robustness metric (Max-Sensitivity draws perturbations) and the faithfulness
-metrics (random subset selection).
+field, but **no code path ever called it**. Five evaluated methods sample
+internally (SmoothGrad, VarGrad, GradientSHAP, RISE, LIME), as do the
+robustness metric (Max-Sensitivity draws perturbations) and Faithfulness
+Correlation (random subset selection).
 
 Consequence: those rows were **not reproducible between runs**, and the reported
 value depended on the interpreter's arbitrary starting RNG state.
 
-Fix: the runner now seeds per evaluation item from
-`blake2b(master_seed, model, method, image_idx)`. Because the seed derives from
-the item's identity rather than from a running stream, a resumed run reproduces
-a clean run exactly. `tests/test_seeding.py` pins this, including stability
-across `PYTHONHASHSEED` (Python's `hash()` is randomised per process and would
-have silently broken cross-machine reproducibility).
+Fix: the runner reseeds Python, NumPy and PyTorch before every evaluation from
+`crc32(seed|model|method|image_idx)`, and the attribution and its metrics then
+draw from that one stream. Because the seed derives from the evaluation's
+identity rather than from a running stream, a resumed run reproduces a clean run
+exactly, and reordering methods or dropping a model changes no other row.
+`tests/test_seeding.py` pins this, including stability across `PYTHONHASHSEED`
+(Python's `hash()` is randomised per process).
 
 ### 2.2 Failed evaluations were dropped silently
 
@@ -128,23 +133,70 @@ over surviving images.
 Consequence: a method that failed on the hard 80% of images would be scored on
 the easy 20%, with nothing in the output indicating it.
 
-Fix: failures are written as explicit rows with `status` and `error`, the
-summary carries an `n_errors` column per `(model, method)`, and per-metric
-failures are recorded in `metric_errors`.
+Fix: a failed attribution is a row with an `error` field; `summary.csv` counts
+it (`n_failed`), `failures.json` lists it, and a resumed run retries it. A metric
+that raises leaves the other metrics of its row intact and records its reason in
+`metric_errors`. The revision scripts append their failures to
+`results/revision_neucom/failures.csv`.
 
-### 2.3 Computational cost was measured and then discarded
+### 2.3 Images with an undefined metric were left out
+
+A method can return a constant map (Grad-CAM++ near the pole of its weights, an
+all-zero LIME surrogate). Every metric is undefined on it, so the image used to
+drop out of the cell's mean, and a method was averaged over the images on which
+it happened to work. Quantus's bounding-box Pointing Game went the other way: it
+counts a hit when any maximal pixel lies in the box, so a constant map, all of
+whose pixels tie for the maximum, scored a hit.
+
+Fix (`xai_bench/scoring.py`): every image is scored. A constant map gets no
+credit (0 on PG, EBPG, FC, FE and SP). For Max-Sensitivity it counts as a
+robustness failure, scored +∞; because MS is unbounded and heavy-tailed, its
+cells are medians over all images, and a cell is ∞ when the method fails on at
+least half of them. The runner flags constant maps (`degenerate_map`) and
+`summary.csv` reports the scored statistics next to the number of undefined
+images, so the raw counts stay visible.
+
+### 2.4 Computational cost was measured and then discarded
 
 The runner recorded `time_ms` per attribution, but the summary aggregated only
-`config.metrics`, so the cost column never reached `summary.csv`. This is why
-"computational cost" — one of the paper's five dimensions — has **no data** in
-the published result set.
+`config.metrics`, so the cost column never reached `summary.csv`, and the timed
+window did not wait for queued GPU work.
 
-Fix: `time_ms` and `peak_gpu_mb` are now aggregated as first-class columns.
-Re-running the benchmark will populate the dimension. Until then, the figure
-generator and the website both report it as `not_available` rather than
-substituting a proxy.
+Fix: `time_ms` (GPU-synchronised) and `peak_gpu_mb` are aggregated as
+first-class columns. The published cost table comes from a separate synchronised
+re-timing on the eight backbones (`scripts/revision_neucom/time_methods.py`,
+`results/raw/computational_cost.csv`).
 
-### 2.4 The APF metric mutated shared configuration
+### 2.5 Grad-CAM on ViT-B/16 read a layer without gradient
+
+The head of a class-token ViT reads only token 0 of `forward_features`, so the
+patch tokens of that output receive no gradient and Grad-CAM on them is an
+all-zero map. Between 1 July and 11 November 2026 the registry Grad-CAM read
+`forward_features` on every backbone, including the class-token ViTs.
+
+Fix: for class-token ViTs the CAM methods target the input normalisation of the
+last block (`blocks[-1].norm1`, the standard pytorch-grad-cam choice), and any
+CAM whose target layer receives no gradient at any position now raises instead
+of returning a blank map. The published gallery had been rendered with the
+faulty code: its ViT-B/16 Grad-CAM and Grad-CAM++ cells were blank. It was
+replaced.
+
+### 2.6 ViT-B/16 received the wrong input statistics
+
+ViT-B/16 (mean = std = 0.5) and MobileViT-v2 (mean 0, std 1) were trained with
+non-ImageNet statistics but received ImageNet-normalised images; ViT-B/16 drops
+from 88.1% to 84.8% top-1 on the 1,000 images under them. Fix: an exact affine
+map inside the model (`InputStatsAdapter`) converts the input for every call
+path, including the Captum and Quantus perturbations.
+
+### 2.7 AttnLRP was shown where only a fallback runs
+
+AttnLRP's propagation rules are defined for the isotropic ViT. On the other
+backbones the code falls back to generic LXT rules, which are not AttnLRP. The
+old gallery drew those fallback maps under the AttnLRP heading on six backbones.
+They are now shown as not applicable, and AttnLRP is evaluated on ViT-B/16 only.
+
+### 2.8 The APF metric mutated shared configuration
 
 `attention_preserving_faithfulness()` did:
 
@@ -153,43 +205,41 @@ kwargs['metric_kwargs']['perturb_func'] = apf_perturb_func
 ```
 
 `metric_kwargs` was passed through from the config object, so this wrote into
-the live configuration dict. Fix: the dict is copied before modification.
+the live configuration dict. Fix: the dict is copied before modification. APF is
+not part of the published grid.
+
+### 2.9 The command-line runner started with empty registries
+
+`python -m xai_bench.runner` imported the registries from
+`xai_bench.registry`, which is filled only when the registries are first read
+through the `xai_bench` package, so every run stopped at "unknown dataset". The
+runner now imports them through the package.
 
 ---
 
-## 3. Known inconsistency, not corrected
+## 3. Resolved: one Grad-CAM layer for both localisation metrics
 
-**Grad-CAM is computed from two different layers depending on which script runs
-it, and the two paths feed the paper's bounding-box vs dense-mask comparison.**
+The July audit recorded that Grad-CAM came from two different layers depending
+on the script: the registry read `forward_features` (the bounding-box Pointing
+Game) while `scripts/bench/ebpg_eval.py` re-implemented Grad-CAM and hooked
+`blocks[-1].norm1` on ViTs (the dense-mask EBPG). Part of the gap between the two
+metrics could therefore have been a layer effect.
 
-* `xai_bench/methods/cam_methods.py` (used for all bbox/pointing-game results)
-  takes `model.forward_features(x)` for every backbone, including isotropic
-  ViTs.
-* `scripts/bench/ebpg_eval.py` (dense-mask EBPG) re-implements Grad-CAM locally
-  and, for ViTs, hooks `model.blocks[-1].norm1` instead — documented in that
-  file as deliberate, since the ViT head pools only the class token.
-
-The choice is defensible in isolation, but it means the bbox number and the
-dense-mask number for ViT Grad-CAM come from **different layers**. The paper
-attributes the gap between them to metric saturation. Part of it may instead be
-a layer effect.
-
-This has **not** been silently changed, because doing so would alter a reported
-result. Recommended resolution: run both metrics through the single registry
-Grad-CAM, or run both through the `blocks[-1].norm1` variant, and confirm the
-dense-mask conclusion survives. See "Recommended next steps" in the audit report.
+Both published localisation metrics now come from the registry Grad-CAM, which
+reads `blocks[-1].norm1` on class-token ViTs (§2.5): the Pointing Game of the
+seeded grid and the EBPG of `scripts/revision_neucom/loc.py`, which scores the
+bounding-box PG and EBPG from the same attribution. `ebpg_eval.py` is kept only
+as the older, standalone script; no published number comes from it.
 
 ---
 
-## 4. Scope discrepancies between the paper text and the result data
+## 4. Scope of the published results
 
-Stated for transparency; neither has been "fixed", because the result files are
-the evidence and the paper text is not in this repository.
-
-| Claim in the abstract | Present in `results/processed/records.json` |
+| Claim in the paper | In `results/processed/records.json` |
 |---|---|
-| 13 attribution methods | **14** distinct methods |
-| 8 representative backbones | **10** distinct backbones |
-| 5 evaluation dimensions | **4** with data; computational cost has none |
+| 13 attribution methods | 13: the 11 methods defined on every backbone, plus Attention Rollout and AttnLRP on ViT-B/16 |
+| 8 representative backbones | 8 |
+| 5 evaluation dimensions | 5: faithfulness, localisation, robustness and complexity per cell; computational cost per method |
+| 1,000 evaluation images | EBPG on the 1,000 (100 for IG and the perturbation methods); the five-metric grid on the leading 100 (ResNet-50, ViT-B/16) or 50 images |
 
 The website and figures report the counts found in the data.

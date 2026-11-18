@@ -69,8 +69,9 @@
         </div>
         <figcaption>
           <b>Attribution-method rankings do not survive the change of architecture.</b>
-          Each line connects a method's rank computed on CNN backbones (left) to its rank
-          computed on transformer backbones (right). A flat line means the ranking transfers.
+          Each line connects a method's rank on the CNN (left) to its rank over the seven
+          transformer backbones (right), for the methods that run on every backbone. A flat
+          line means the ranking transfers.
         </figcaption>
       </figure>
     </div>
@@ -88,9 +89,10 @@
           Vision Transformer (ViT) architectures that now dominate computer vision. This paper
           presents a controlled benchmark that evaluates attribution quality across five
           dimensions: faithfulness, localisation, robustness, complexity, and computational
-          cost. A standardised framework assesses attribution methods from four algorithmic
-          families on representative backbones spanning CNNs, isotropic ViTs, hierarchical
-          transformers, hybrid architectures, and linear-attention transformers.
+          cost. A standardised framework assesses 13 attribution methods from four
+          algorithmic families on eight representative backbones spanning CNNs, isotropic
+          ViTs, hierarchical transformers, hybrid architectures, and linear-attention
+          transformers.
         </p>
         <p>
           The results show that attribution performance is strongly architecture-dependent and
@@ -99,7 +101,9 @@
           bounding-box localisation metric on CNNs and most ViTs but perform poorly on
           linear-attention architectures. Pixel-level dense-mask evaluation further reveals
           that these gains largely reflect metric saturation rather than accurate localisation.
-          CAM-based methods also exhibit limited robustness on global-attention transformers,
+          CAM-based methods also exhibit limited robustness on backbones whose class score is
+          not a pooled linear read-out of the feature map, a failure we trace for Grad-CAM++
+          to a pole in its closed-form weights that also affects a convolutional network,
           whereas attention rollout provides consistently stable explanations with poor
           localisation. Furthermore, faithfulness correlation offers limited discrimination
           between attribution methods, highlighting the limitations of single-metric
@@ -167,7 +171,17 @@
       <p class="section-intro">
         Every measured cell of the benchmark. Rows are attribution methods,
         columns are backbones grouped by architecture family. Hover a cell for
-        its standard deviation, sample count and source run.
+        its sample count, the images scored by rule, and its source.
+      </p>
+      <p class="note scoring-note">
+        <b>How a cell is scored.</b> Every evaluated image enters every cell: 100
+        images for ResNet-50 and ViT-B/16 and 50 for the other backbones (EBPG: 1,000,
+        or 100 for Integrated Gradients and the perturbation methods). A method can
+        return a constant map, on which the metrics are undefined; that image gets no
+        credit (0) rather than being left out. On Max-Sensitivity it counts as a
+        robustness failure, and because that metric is unbounded and heavy-tailed its
+        cells are medians: <b>&infin;</b> marks a method that fails on at least half
+        of the images. Every evaluation is seeded from its backbone, method and image.
       </p>
       <div class="controls" role="group" aria-label="Matrix filters">
         <label class="control">
@@ -185,7 +199,7 @@
         <label class="control">
           <span class="control-label">Sort methods by</span>
           <select id="matrix-sort" class="select">
-            <option value="score">Mean score</option>
+            <option value="score">Score</option>
             <option value="name">Name</option>
             <option value="family">Method family</option>
           </select>
@@ -240,27 +254,29 @@
       <h2 class="section-title">Explanation gallery</h2>
       <p class="section-intro">
         One image, every backbone &times; every attribution method. Rows are the
-        eight benchmark backbones, columns the attribution methods. Each model is
+        eight benchmark backbones, columns the 13 attribution methods. Each model is
         explained at its own top-1 class.
       </p>
 
       <figure class="figure-block">
         <a href="public/figures/qualitative_grid_cat.png" target="_blank" rel="noopener">
           <img src="public/figures/qualitative_grid_cat.png"
-               alt="Grid of attribution heatmaps: eight backbones as rows, attribution
+               alt="Grid of attribution heatmaps: eight backbones as rows, 13 attribution
                     methods as columns, computed on a single cat image. Red borders mark
-                    documented collapse cases; grey n/a cells mark methods that do not
+                    documented collapse cases; grey N/A cells mark methods that do not
                     apply to that backbone."
-               loading="lazy" width="2000" height="1280">
+               loading="lazy" width="2000" height="1281">
         </a>
         <figcaption>
           <b>The architecture dependence is visible directly.</b>
           <span class="swatch-key"><span class="swatch-fail"></span>Red border</span> marks
           documented collapse cases &mdash; the Grad-CAM family on the linear-attention
           EfficientViT backbones, and attention rollout on ViT-B/16, which spreads over the
-          background rather than the object. Grey <code>n/a</code> cells are methods that do
-          not apply to that backbone: rollout needs a global CLS-token attention map, which
-          only the isotropic ViT has.
+          background rather than the object. Grey <code>N/A</code> cells are methods that do
+          not apply to that backbone: Attention Rollout needs a global CLS-token attention
+          map, which only the isotropic ViT has, and AttnLRP's propagation rules are defined
+          for the isotropic ViT; on the other backbones only a generic fallback would run,
+          so it is not shown.
           <span class="figcaption-src">Source:
           <code>scripts/bench/qualitative_grid_cat.py</code></span>
         </figcaption>
@@ -301,14 +317,72 @@
     </div>
   </section>
 
+  <!-- ═════════════════════ Grad-CAM++ instability ═════════════════ -->
+  <section id="gradcampp" class="section">
+    <div class="container wide">
+      <h2 class="section-title">Why Grad-CAM++ breaks</h2>
+      <p class="section-intro">
+        Grad-CAM++ weighs each gradient with a closed-form coefficient
+        &alpha; = 1 / (2 + S&middot;g), which has a pole where S&middot;g = &minus;2. Backbones
+        whose class score is a pooled linear read-out of the feature map stay far from it;
+        the others do not, whatever their attention type.
+      </p>
+
+      <figure class="figure-block">
+        <a href="public/figures/gcpp_mechanism.png" target="_blank" rel="noopener">
+          <img src="public/figures/gcpp_mechanism.png"
+               alt="Left: per-image distance of the Grad-CAM++ weights from their pole on 21
+                    backbones, grouped by class read-out. Right: median Max-Sensitivity of
+                    Grad-CAM, Grad-CAM++ and Grad-CAM++ with the weights bounded; MaxViT-S
+                    and MaxViT-T are infinite."
+               loading="lazy" width="1565" height="707">
+        </a>
+        <figcaption>
+          <b>The instability follows the class read-out, not the attention type.</b>
+          (a) The smallest distance of the weights from the pole, per image, on 21 backbones:
+          the global-average-pool + linear heads (ResNets, PVT-v2, Swin, MobileViT-v2) sit
+          at the regular value 2; the layer-normalised, MLP and class-token heads approach
+          the pole, the convolutional ConvNeXt included. (b) Near the pole the map either
+          blows up or, after the final ReLU, collapses to zero: on MaxViT-S, Grad-CAM++
+          returns a constant map on 71% of the 1,000 images, and its Max-Sensitivity is
+          unbounded (&infin;). Bounding the weights tames the blow-up on the class-token
+          ViTs (ViT-B/16: median 7.6 &rarr; 0.5) but not the collapse on MaxViT.
+          <span class="figcaption-src">Source:
+          <code>scripts/revision_neucom/gcpp.py</code>, <code>ms.py</code>,
+          <code>fig_revision.py</code></span>
+        </figcaption>
+      </figure>
+
+      <figure class="figure-block">
+        <a href="public/figures/capacity.png" target="_blank" rel="noopener">
+          <img src="public/figures/capacity.png"
+               alt="Grad-CAM EBPG and Grad-CAM++ median Max-Sensitivity against parameter
+                    count for 21 backbones, coloured by architecture family."
+               loading="lazy" width="1600" height="680">
+        </a>
+        <figcaption>
+          <b>Size does not explain it.</b> Grad-CAM localisation (left) and Grad-CAM++
+          stability (right) against parameter count. Over the 21 backbones the
+          architecture family explains 85% of the variance of Grad-CAM EBPG, the parameter
+          count less than 1%. Along the EfficientViT ladder localisation gets worse as the
+          model grows. The grey band marks a matched-capacity group.
+          <span class="figcaption-src">Source:
+          <code>scripts/revision_neucom/analyze_revision.py</code>,
+          <code>fig_revision.py</code></span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
   <!-- ════════════════════════ computational cost ═════════════════ -->
   <section id="cost" class="section">
     <div class="container">
       <h2 class="section-title">Computational cost</h2>
       <p class="section-intro">
-        Time to produce one explanation. The scale is logarithmic &mdash; the
-        span from the cheapest gradient method to the most expensive
-        perturbation method is close to three orders of magnitude.
+        Time to produce one explanation, GPU-synchronised, averaged over the
+        backbones on which each method applies. The scale is logarithmic &mdash; the
+        span from the cheapest method to the most expensive perturbation method is
+        close to three orders of magnitude.
       </p>
       <div id="cost-chart" class="cost-chart"></div>
       <p class="note cost-note" id="cost-note"></p>
@@ -352,6 +426,11 @@
               <a href="https://github.com/LUSSeg/ImageNet-S"
                  target="_blank" rel="noopener">LUSSeg/ImageNet-S</a>
             </dd>
+          </div>
+          <div>
+            <dt>Images</dt>
+            <dd>A fixed set of 1,000 (161 classes); the five-metric grid uses the
+                leading 100 (ResNet-50, ViT-B/16) or 50 (other backbones)</dd>
           </div>
           <div>
             <dt>Redistributed here</dt>
@@ -417,7 +496,9 @@ cd VIT_XAI_Bench
 pip install -e ".[dev]"
 
 python scripts/smoke_test.py            # verify the install, ~30 s on CPU
-python scripts/build_results.py         # raw runs  -> canonical records
+python -m xai_bench.runner --config configs/revision_grid_seeded.yaml
+                                        # the grid (also _attnlrp and _50)
+python scripts/build_results.py         # runs      -> canonical records
 python scripts/validate_results.py      # schema + range + duplicate checks
 python scripts/export_web_data.py       # records   -> this website</code></pre>
       <p class="note" style="margin-top:1rem">

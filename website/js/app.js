@@ -27,11 +27,42 @@ const modelSpec = (key) => state.data.models.find((m) => m.key === key);
 const methodSpec = (key) => state.data.methods.find((m) => m.key === key);
 const measuredMetrics = () => state.data.metrics.filter((m) => m.measured);
 
+/**
+ * The value of a cell: its metric's statistic over all images (the median for
+ * Max-Sensitivity, the mean otherwise), Infinity for a cell the method fails on
+ * at least half the images of. Records of schema 1.0 carry only the mean.
+ */
+function metricValue(mv) {
+  if (!mv) return null;
+  if (mv.unbounded) return Infinity;
+  return mv.value != null ? mv.value : mv.mean;
+}
+
 function cellValue(model, method, metric) {
   const rec = state.data.records.find((r) => r.model === model && r.method === method);
-  if (!rec) return null;
-  const mv = rec.metrics[metric];
-  return mv ? mv.mean : null;
+  return rec ? metricValue(rec.metrics[metric]) : null;
+}
+
+/** Combine cells the way the metric combines images: median or mean. */
+function aggregate(vals, spec) {
+  if (!vals.length) return null;
+  if (spec.statistic === 'median') {
+    const s = vals.slice().sort((a, b) => compareAsc(a, b));
+    const k = Math.floor(s.length / 2);
+    return s.length % 2 ? s[k] : (s[k - 1] === s[k] ? s[k] : (s[k - 1] + s[k]) / 2);
+  }
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+/** Ascending order that also handles Infinity (Infinity - Infinity is NaN). */
+const compareAsc = (a, b) => (a === b ? 0 : a < b ? -1 : 1);
+const compareBest = (spec) => (a, b) =>
+  (spec.higher_is_better ? compareAsc(b, a) : compareAsc(a, b));
+
+/** Finite range of a list of values, for the colour scale. */
+function finiteRange(vals) {
+  const f = vals.filter(Number.isFinite);
+  return f.length ? [Math.min(...f), Math.max(...f)] : [0, 1];
 }
 
 function cellRecord(model, method) {
@@ -53,7 +84,7 @@ function activeMethods(family = 'all') {
 
 /** Format a measurement. Keeps a stable width so columns line up. */
 const fmt = (v, digits = 3) =>
-  v == null || !Number.isFinite(v) ? '—' : v.toFixed(digits);
+  v === Infinity ? '∞' : v == null || !Number.isFinite(v) ? '—' : v.toFixed(digits);
 
 /* ───────────────────────────── tooltip ────────────────────────────── */
 
@@ -90,6 +121,8 @@ function rampColor(t) {
 
 /** Normalise a value to 0..1 within [lo,hi], flipping when lower is better. */
 function normalise(v, lo, hi, higherIsBetter) {
+  // An unbounded cell (Max-Sensitivity, lower is better) is the worst possible.
+  if (v === Infinity) return higherIsBetter ? 1 : 0;
   if (v == null || hi === lo) return 0.5;
   const t = (v - lo) / (hi - lo);
   return higherIsBetter ? t : 1 - t;
@@ -244,22 +277,22 @@ function renderMatrix() {
   const spec = metricSpec(metric);
 
   $('#matrix-metric-note').textContent =
-    `${spec.description} ${spec.higher_is_better ? 'Higher is better.' : 'Lower is better.'}`;
+    `${spec.description} ${spec.higher_is_better ? 'Higher is better.' : 'Lower is better.'} ` +
+    `Each cell is the ${spec.statistic} over all evaluated images.`;
 
   const models = activeModels(family);
   let methods = activeMethods(methodFamily);
 
-  const meanFor = (methodKey) => {
-    const vals = models.map((m) => cellValue(m.key, methodKey, metric)).filter((v) => v != null);
-    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
-  };
+  const scoreFor = (methodKey) => aggregate(
+    models.map((m) => cellValue(m.key, methodKey, metric)).filter((v) => v != null), spec);
 
   if (sortBy === 'score') {
+    const best = compareBest(spec);
     methods = methods.slice().sort((a, b) => {
-      const va = meanFor(a.key), vb = meanFor(b.key);
+      const va = scoreFor(a.key), vb = scoreFor(b.key);
       if (va == null) return 1;
       if (vb == null) return -1;
-      return spec.higher_is_better ? vb - va : va - vb;
+      return best(va, vb);
     });
   } else if (sortBy === 'name') {
     methods = methods.slice().sort((a, b) => a.label.localeCompare(b.label));
@@ -274,7 +307,7 @@ function renderMatrix() {
     const v = cellValue(mo.key, me.key, metric);
     if (v != null) all.push(v);
   }));
-  const lo = Math.min(...all), hi = Math.max(...all);
+  const [lo, hi] = finiteRange(all);
 
   const host = $('#matrix-grid');
   host.innerHTML = '';
@@ -339,11 +372,18 @@ function renderMatrix() {
         const mv = rec.metrics[metric];
         attachTip(td, () => {
           const n = mv.count != null ? `${mv.count} images` : 'n not recorded';
-          const sd = mv.std != null ? ` ± ${fmt(mv.std, 3)}` : '';
-          const run = rec.provenance.source_run || 'run not recorded';
+          const stat = mv.statistic || 'mean';
+          const sd = stat === 'mean' && mv.std != null ? ` ± ${fmt(mv.std, 3)} (sd)` : '';
+          const val = mv.unbounded
+            ? '∞: the method fails on at least half of the images'
+            : `${fmt(metricValue(mv), 4)}${sd}`;
+          const scored = !mv.n_undefined ? ''
+            : `<br>${mv.n_undefined} image${mv.n_undefined > 1 ? 's' : ''} with a constant ` +
+              `map, scored ${spec.higher_is_better ? '0 (no credit)' : 'as unbounded'}`;
+          const run = mv.source || rec.provenance.source_run || 'run not recorded';
           return `<strong>${me.label} · ${mo.label}</strong><br>` +
-            `${spec.label}: ${fmt(mv.mean, 4)}${sd}<br>` +
-            `${n}<br><span style="opacity:.7">source: ${run}</span>`;
+            `${spec.label} (${stat}): ${val}<br>` +
+            `${n}${scored}<br><span style="opacity:.7">source: ${run}</span>`;
         });
       }
       tr.append(td);
@@ -356,7 +396,8 @@ function renderMatrix() {
   // legend
   const legend = $('#matrix-legend');
   legend.innerHTML = '';
-  legend.append(el('span', '', spec.higher_is_better ? 'worse' : 'better'));
+  // normalise() flips lower-is-better metrics, so dark always means better.
+  legend.append(el('span', '', 'worse'));
   const scale = el('div', 'legend-scale');
   for (let k = 0; k <= 5; k++) {
     const sw = el('div', 'legend-swatch');
@@ -364,8 +405,11 @@ function renderMatrix() {
     scale.append(sw);
   }
   legend.append(scale);
-  legend.append(el('span', '', spec.higher_is_better ? 'better' : 'worse'));
-  legend.append(el('span', '', `· range ${fmt(lo, 2)} – ${fmt(hi, 2)} · “·” = not measured`));
+  legend.append(el('span', '', 'better'));
+  const inf = all.some((v) => v === Infinity)
+    ? ' · ∞ = fails on at least half the images' : '';
+  legend.append(el('span', '',
+    `· range ${fmt(lo, 2)} – ${fmt(hi, 2)} · “·” = not measured${inf}`));
 }
 
 /* ═════════════════════════ transfer panel ═════════════════════════ */
@@ -400,8 +444,9 @@ function renderTransfer() {
     card.append(ranks);
 
     const vals = el('div', 'tc-values');
-    vals.append(el('span', '', `CNN ${fmt(r.cnn_value, 3)}`));
-    vals.append(el('span', '', `TFM ${fmt(r.transformer_value, 3)}`));
+    const v = (x, unbounded) => fmt(unbounded ? Infinity : x, 3);
+    vals.append(el('span', '', `CNN ${v(r.cnn_value, r.cnn_value_unbounded)}`));
+    vals.append(el('span', '', `TFM ${v(r.transformer_value, r.transformer_value_unbounded)}`));
     card.append(vals);
     host.append(card);
   });
@@ -422,8 +467,8 @@ function renderRanking() {
     return;
   }
 
-  const values = rows.map((r) => r.value);
-  const lo = Math.min(...values), hi = Math.max(...values);
+  const valueOf = (r) => (r.unbounded ? Infinity : r.value);
+  const [lo, hi] = finiteRange(rows.map(valueOf));
 
   rows.forEach((r) => {
     const ms = methodSpec(r.method);
@@ -437,14 +482,15 @@ function renderRanking() {
 
     const track = el('div', 'rank-bar-track');
     const bar = el('div', 'rank-bar');
-    const t = normalise(r.value, lo, hi, spec.higher_is_better);
+    const t = normalise(valueOf(r), lo, hi, spec.higher_is_better);
     bar.style.width = `${Math.max(3, t * 100)}%`;
     bar.style.background = rampColor(t);
     track.append(bar);
     row.append(track);
 
     const val = el('div', 'rank-value');
-    val.innerHTML = `${fmt(r.value, 3)} <small>n=${r.n_models}</small>`;
+    const stat = r.n_models > 1 ? `${r.statistic || 'mean'} of ` : '';
+    val.innerHTML = `${fmt(valueOf(r), 3)} <small>${stat}n=${r.n_models}</small>`;
     row.append(val);
     host.append(row);
   });
@@ -481,27 +527,27 @@ function renderArchDetail() {
   const metric = $('#matrix-metric') ? $('#matrix-metric').value : measuredMetrics()[0].key;
   const spec = metricSpec(metric);
 
+  const best = compareBest(spec);
   const rows = activeMethods()
     .map((me) => {
       const v = cellValue(m.key, me.key, metric);
       if (v == null) return null;
-      // benchmark-wide mean for this method, for the delta
-      const others = activeModels()
+      // benchmark-wide value of this method (mean, or median for MS), for the delta
+      const overall = aggregate(activeModels()
         .map((mo) => cellValue(mo.key, me.key, metric))
-        .filter((x) => x != null);
-      const mean = others.reduce((a, b) => a + b, 0) / others.length;
-      return { me, v, delta: v - mean };
+        .filter((x) => x != null), spec);
+      const delta = Number.isFinite(v) && Number.isFinite(overall) ? v - overall : null;
+      return { me, v, delta };
     })
     .filter(Boolean)
-    .sort((a, b) => (spec.higher_is_better ? b.v - a.v : a.v - b.v));
+    .sort((a, b) => best(a.v, b.v));
 
   if (!rows.length) {
     host.append(el('p', 'note', 'No measured methods for this backbone.'));
     return;
   }
 
-  const vals = rows.map((r) => r.v);
-  const lo = Math.min(...vals), hi = Math.max(...vals);
+  const [lo, hi] = finiteRange(rows.map((r) => r.v));
 
   const list = el('div', 'ranking-list');
   rows.forEach((r, i) => {
@@ -520,16 +566,17 @@ function renderArchDetail() {
     track.append(bar);
     row.append(track);
 
-    const better = spec.higher_is_better ? r.delta > 0 : r.delta < 0;
     const val = el('div', 'rank-value');
-    val.innerHTML =
-      `${fmt(r.v, 3)} <small>${better ? '+' : ''}${fmt(r.delta, 3)} vs mean</small>`;
+    const sign = r.delta > 0 ? '+' : '';
+    val.innerHTML = r.delta == null ? fmt(r.v, 3)
+      : `${fmt(r.v, 3)} <small>${sign}${fmt(r.delta, 3)} vs all</small>`;
     row.append(val);
     list.append(row);
   });
   host.append(list);
   host.append(el('p', 'note',
-    `Scored by ${spec.label}. “vs mean” compares with this method's average over all backbones.`));
+    `Scored by ${spec.label}. “vs all” compares with this method's ${spec.statistic} ` +
+    'over all backbones.'));
 }
 
 
@@ -601,14 +648,17 @@ function renderCost() {
   });
   host.append(legend);
 
-  const slowest = rows[rows.length - 1], fastest = rows[0];
+  // Compare with the fastest method timed on every backbone, not with one that
+  // runs (and was timed) on a single backbone only.
+  const slowest = rows[rows.length - 1];
+  const fastest = rows.find((r) => !r.restricted_backbones) || rows[0];
   const ratio = Math.round(slowest.time_ms / fastest.time_ms);
   const anyRestricted = rows.some((r) => r.restricted_backbones);
   note.textContent =
     `${slowest.method_label} costs about ${ratio}× ${fastest.method_label}. ` +
     (anyRestricted ? '† measured only on the backbones where the method applies. ' : '') +
-    'Timings are method-level; the hardware they were recorded on is not part ' +
-    'of the archived results.';
+    'Mean GPU-synchronised time per explanation over the backbones on which each ' +
+    'method applies, 20 images per backbone, on one GPU.';
 }
 
 /* ═══════════════════════ dimension coverage ═══════════════════════ */
@@ -639,10 +689,10 @@ function renderDimensions() {
   const gapNames = Object.keys(gaps);
   const total = state.data.records.length;
   $('#provenance-note').textContent = gapNames.length
-    ? 'Every result traces back to the run that produced it. The archived runs ' +
-      `predate full provenance capture, so some fields (${gapNames.join(', ')}) ` +
-      'were never recorded for them. Runs made with the current code record all ' +
-      'of them automatically.'
+    ? 'Every cell traces back to the run that produced it, with its configuration, ' +
+      'seed and dataset. Some fields ' +
+      `(${gapNames.join(', ')}) were not written by the runs and are left empty ` +
+      'rather than guessed.'
     : 'Every result carries complete provenance metadata.';
 }
 

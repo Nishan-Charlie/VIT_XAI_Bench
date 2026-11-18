@@ -1,0 +1,18 @@
+# Mean time per explanation (ms), GPU-synchronised, over the backbones on which
+# each method applies and 20 images per backbone. Copied from
+# results/revision_neucom/analysis/cost_table.csv (scripts/revision_neucom/time_methods.py),
+# the paper's cost table. restricted_backbones: measured on ViT-B/16 only.
+method,time_ms,n_backbones,n_images,restricted_backbones
+attention_rollout,12.4,1,20,true
+saliency,27.1,8,20,false
+input_x_gradient,27.8,8,20,false
+grad_cam_plus_plus,35.1,8,20,false
+grad_cam,35.9,8,20,false
+smoothgrad,135.4,8,20,false
+vargrad,137.1,8,20,false
+gradient_shap,139.0,8,20,false
+attnlrp,208.8,1,20,true
+integrated_gradients,428.1,8,20,false
+lime,1344.4,8,20,false
+rise,2236.2,8,20,false
+occlusion,9892.0,8,20,false

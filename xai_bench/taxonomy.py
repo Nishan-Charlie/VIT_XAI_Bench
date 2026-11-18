@@ -149,15 +149,23 @@ METRICS: dict[str, MetricSpec] = {
         MetricSpec(
             "pointing_game", "Pointing Game (bbox)", "localization",
             True, (0.0, 1.0),
-            "Fraction of images whose attribution peak falls inside the object "
-            "bounding box (Zhang et al., 2018). Coarse: a bounding box includes "
-            "background.",
+            "Fraction of images whose attribution peak falls inside the tight "
+            "bounding box of the object mask (Zhang et al., 2018). Coarse: the box "
+            "includes background, and a random peak already scores about 0.6.",
+        ),
+        MetricSpec(
+            "ebpg", "Energy-Based Pointing Game (mask)", "localization",
+            True, (0.0, 1.0),
+            "Fraction of attribution energy inside the pixel-level object mask "
+            "(Wang et al., 2020). Does not saturate; the localisation metric of "
+            "record. A random map scores the mask area, 0.31 on the 1,000 images.",
         ),
         MetricSpec(
             "max_sensitivity", "Max-Sensitivity", "robustness",
             False, (0.0, None),
-            "Largest change in the explanation over small input perturbations "
-            "(Yeh et al., 2019). Lower is more stable.",
+            "Largest relative change in the explanation over small input "
+            "perturbations (Yeh et al., 2019). An image whose map is constant or "
+            "not finite counts as unbounded.",
         ),
         MetricSpec(
             "sparseness", "Sparseness (Gini)", "complexity",

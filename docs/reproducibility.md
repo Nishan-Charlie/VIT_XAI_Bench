@@ -67,7 +67,7 @@ Then the test suite:
 pytest tests -v
 ```
 
-Expected: **80 passed**.
+Expected: **101 passed**.
 
 ---
 
@@ -120,74 +120,72 @@ none are committed.
 Configuration is YAML; every field can be overridden on the command line.
 
 ```bash
-# Smallest useful run — one config, few images
+# Smallest useful run: one config, few images
 python -m xai_bench.runner --config configs/smoke_5metrics.yaml --seed 42
 
-# Medium: all methods x 4 backbones x 100 images x 5 metrics
-python -m xai_bench.runner --config configs/full_benchmark_100.yaml --seed 42
-
-# The efficient/hierarchical/hybrid suite
-python -m xai_bench.runner --config configs/vit_suite_10.yaml --seed 42
+# The published five-metric grid (seed 0)
+python -m xai_bench.runner --config configs/revision_grid_seeded.yaml          # ResNet-50, ViT-B/16, 100 images
+python -m xai_bench.runner --config configs/revision_grid_seeded_attnlrp.yaml  # AttnLRP on ViT-B/16
+python -m xai_bench.runner --config configs/revision_grid_seeded_50.yaml       # six backbones, 50 images
 ```
 
 Available overrides: `--seed`, `--num-images`, `--device`, `--run-name`,
 `--output-dir`, `--deterministic`.
 
+The localisation (EBPG), multi-seed robustness, Grad-CAM++ and timing analyses
+are separate scripts in `scripts/revision_neucom/`; see its README.
+
 ### Runs that must be isolated
 
-`attnlrp` applies **class-level monkey patches** to timm's
-`vision_transformer` module. Once applied they change the gradients of every
-other gradient-based method in the same process. Run them from their own
-configs, in their own processes:
-
-```bash
-python -m xai_bench.runner --config configs/attnlrp_grid_vit.yaml    # flat ViTs
-python -m xai_bench.runner --config configs/attnlrp_grid_hier.yaml   # hierarchical
-```
-
-Do not combine these two in one process either: the flat-ViT path patches the
-timm norm subclasses, which would silently change the hierarchical baseline.
+`attnlrp` applies **class-level patches** to timm modules. Once applied they
+change the gradients of every other gradient-based method in the same process,
+so AttnLRP has its own config and must run in its own process.
 
 ### What a run writes
 
 ```
 results/<run_name>/
 ├── config.json       the resolved configuration
-├── provenance.json   git commit + dirty flag, python/torch/CUDA versions, GPU, seed
-├── results.json      one row per (model, method, image), including failures
+├── provenance.json   git commit + dirty flag, python/torch/CUDA versions, GPU, seeds
+├── results.json      one row per (model, method, image, seed), failures included
 ├── results.csv       the same, flat
-└── summary.csv       per (model, method): mean/std/count per metric + n_errors
+├── failures.json     methods that could not be set up, and every failed evaluation
+└── summary.csv       per (model, method): n_evaluations, n_failed, n_constant_maps,
+                      scored <metric>_mean/median/std/count, <metric>_undefined,
+                      time_ms_*, peak_gpu_mb_*
 ```
+
+A failed evaluation is retried when the same run is started again; every other
+row is kept.
 
 ### Expected runtime
 
-Measured shapes, not promises — these depend heavily on GPU and on which
-methods are enabled. RISE, LIME and Max-Sensitivity dominate the cost because
-they re-explain the image many times.
+On one RTX 4070 Laptop GPU (8 GB):
 
-| Run | Scale | Hardware |
-|---|---|---|
-| `smoke_5metrics.yaml` | minutes | CPU or GPU |
-| `full_benchmark_100.yaml` | hours | single modern GPU |
-| Full suite, n=1000 | ~a day per backbone group | single modern GPU |
+| Run | Wall-clock |
+|---|---|
+| `smoke_5metrics.yaml` | minutes |
+| `revision_grid_seeded.yaml` (ResNet-50 and ViT-B/16, 100 images) | 3 h 43 min |
+| `revision_grid_seeded_attnlrp.yaml` | 8 min |
+| `revision_grid_seeded_50.yaml` (six backbones, 50 images) | 12 h 22 min (one restart after a GPU driver fault; the resumed run kept the finished rows) |
 
-> The archived runs did not record wall-clock time (see
-> `docs/scientific_integrity.md` §2.3), so precise figures are **not available**
-> and are not invented here. Runs made with the current code record `time_ms`
-> and `peak_gpu_mb` per attribution.
+Occlusion, LIME, RISE and Max-Sensitivity dominate, because each re-explains or
+re-evaluates the image many times. Per-attribution times are in every
+`summary.csv`; the per-method table is `results/raw/computational_cost.csv`.
 
 ---
 
 ## 5. Determinism
 
-Seeding is derived per item:
+Seeding is derived per evaluation:
 
 ```
-item_seed = blake2b(master_seed | model | method | image_idx)
+seed = crc32(seed | model | method | image_idx)
 ```
 
-so a value does not depend on how many items ran before it, and a resumed run
-reproduces a clean run. Python, NumPy, torch and CUDA RNGs are all seeded.
+Python, NumPy and torch (CPU and CUDA) are reseeded from it before the
+attribution, and the metrics continue the same stream. A value therefore does
+not depend on which rows ran before it, and a resumed run reproduces a clean run.
 
 `--deterministic` additionally sets `cudnn.deterministic=True` and disables
 `cudnn.benchmark`. The tradeoff:
@@ -197,8 +195,11 @@ reproduces a clean run. Python, NumPy, torch and CUDA RNGs are all seeded.
 | default | Same seed → same sampling. Small float drift possible from non-deterministic cuDNN kernel selection. | Faster |
 | `--deterministic` | Bit-identical on the same hardware + library versions. | Typically 10–30% slower |
 
-Bit-identical results across **different** GPUs or CUDA versions are not
-achievable and are not claimed.
+Bit-identical results across **different** devices are not achievable and are
+not claimed. Run on CPU instead of GPU, the same evaluation differs by small
+floating-point amounts that peaked maps amplify: a Saliency peak can move by a
+pixel and flip a Pointing Game hit, and Faithfulness Correlation can change in
+the first decimal. Smooth maps such as Grad-CAM agree to about two decimals.
 
 ---
 
@@ -229,25 +230,48 @@ python -m http.server 8000 --directory website
 ### Expected output of `build_results.py`
 
 ```
-rows read              : 127
+rows read              : 90
 dropped (other paper)  : 0
-records written        : 117
-  models 10  methods 14
-  ** dimension 'computational_cost' has NO data **
+dropped (no identity)  : 0
+dropped (unknown model): {}
+dropped (unknown meth.): {}
+records written        : 90
+  models 8  methods 13
+metric coverage:
+  faithfulness_correlation      90 records
+  faithfulness_estimate         90 records
+  apf                            0 records
+  pointing_game                 90 records
+  ebpg                          90 records
+  max_sensitivity               90 records
+  sparseness                    90 records
+  attribution_time_ms           13 records
+  note: 'computational_cost' is reported per method, not per cell
+
+wrote results/processed/records.json and results/processed/manifest.json
 ```
 
 ### Expected output of `validate_results.py`
 
 ```
-  records        : 117
+Validating results/processed/records.json
+  schema version : 1.1.0 (expected 1.1.0)
+  records        : 90
+  models         : 8
+  methods        : 13
+
 Dimension coverage:
-  faithfulness          117 records
-  localization          117 records
-  robustness            117 records
-  complexity            117 records
+  faithfulness           90 records
+  localization           90 records
+  robustness             90 records
+  complexity             90 records
   computational_cost      0 records   <- NO DATA
+
 All records valid.
 ```
+
+The `NO DATA` line is expected: cost is measured per method, not per
+(model, method) cell, and lives in `results/processed/method_cost.json`.
 
 ---
 
@@ -257,11 +281,10 @@ Stated plainly rather than papered over.
 
 | Item | Status | Why |
 |---|---|---|
-| The 117 published records | **Re-derivable from `results/raw/benchmark_runs.csv`**, which is committed. | — |
-| Re-running the benchmark end to end | **Blocked without user-supplied data.** | ImageNet-S / VOC images are not redistributable. |
-| Per-image rows behind the archived summaries | **Not available.** | Only aggregated summaries survived; `results/<run>/results.json` files were never committed. |
-| Computational-cost dimension | **Available** as method-level timings in `results/raw/computational_cost.csv`. | Per-`(model, method)` timings were discarded by the old runner. The current runner records `time_ms` and `peak_gpu_mb` per attribution, so a re-run fills the finer granularity. |
-| Dense-mask (EBPG) localisation | **No data in `results/`.** | `scripts/bench/ebpg_eval.py` writes `results/ebpg_results.json`, which was never committed. Needs a GPU re-run. |
-| Robustness / faithfulness *curves* | **Not available.** | Only aggregated scalars were stored; curves need a per-perturbation sweep. |
-| Explanation gallery images | **Available as static figures** (`figures/bench/qualitative_grid_cat.png`, `bench_qualitative.png`, `cam_upsampling_artifact.png`), shipped to the website by `scripts/export_web_assets.py`. | Regenerating them requires a GPU and pretrained weights; they are not derivable from the aggregated records. |
-| Provenance for archived runs | **Partial.** | Git commit, seed, dataset and timestamps were not recorded before this audit. `manifest.json` lists the gaps; new runs record everything. |
+| The published records | **Re-derivable** from the committed runs (`results/revision_grid_seeded*/`, `results/revision_neucom/analysis/summary.json`). | — |
+| Per-image rows | **Committed** for the seeded grid (`results.csv`) and for every revision analysis. | — |
+| Re-running the benchmark end to end | **Blocked without user-supplied data.** | ImageNet-S images are not redistributable. |
+| Robustness / faithfulness *curves* | **Not available.** | Only aggregated scalars are stored; curves need a per-perturbation sweep. |
+| Explanation gallery images | **Available as static figures** (`figures/bench/qualitative_grid_cat.png`, `bench_qualitative.png`, `cam_upsampling_artifact.png`), shipped to the website by `scripts/export_web_assets.py`. | Regenerating them needs pretrained weights; they cannot be derived from aggregated records. |
+| Provenance of the seeded grid | **Partial.** | Its runs predate the merged runner and wrote `config.json` but no `provenance.json`; the records carry run, config, seed and dataset, and leave the rest empty. New runs record everything. |
+| The July 2026 result set | **Kept for the record** in `results/raw/benchmark_runs.csv`; rebuild with `python scripts/build_results.py --raw results/raw/benchmark_runs.csv --no-ebpg --out <dir>`. | Unseeded, undefined images left out, mean MS; superseded. |

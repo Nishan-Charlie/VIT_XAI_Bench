@@ -1,6 +1,6 @@
 """Copy web-optimised figure assets into the website directory.
 
-The figures in ``figures/bench/`` are print-resolution RGBA PNGs — the
+The figures in ``figures/`` are print-resolution RGBA PNGs — the
 qualitative grid alone is 5.8 MB, which is far too heavy to put on a page. This
 script writes downscaled, flattened copies to ``website/public/figures/`` so the
 site stays fast, and so the GitHub Pages deploy (which uploads only ``website/``)
@@ -21,15 +21,18 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-SRC_DIR = REPO_ROOT / "figures" / "bench"
+SRC_DIR = REPO_ROOT / "figures"
 OUT_DIR = REPO_ROOT / "website" / "public" / "figures"
 
-#: (source filename, max width in px). Height follows the aspect ratio.
-#: Widths are chosen so the figure is still readable at the page's content
-#: width on a HiDPI display, without shipping print resolution.
+#: (source path under figures/, max width in px). Height follows the aspect
+#: ratio; the asset keeps the file name. Widths are chosen so the figure is still
+#: readable at the page's content width on a HiDPI display, without shipping
+#: print resolution.
 ASSETS: list[tuple[str, int]] = [
-    ("qualitative_grid_cat.png", 2000),
-    ("cam_upsampling_artifact.png", 1600),
+    ("bench/qualitative_grid_cat.png", 2000),
+    ("bench/cam_upsampling_artifact.png", 1600),
+    ("revision/gcpp_mechanism.png", 1600),
+    ("revision/capacity.png", 1600),
 ]
 
 #: PNG quantisation palette size. The figures are heatmaps over a photo, so a
@@ -80,7 +83,7 @@ def main() -> int:
 
     total_src = total_dst = 0
     for name, max_width in ASSETS:
-        src_bytes, dst_bytes = export(args.src / name, args.out / name, max_width)
+        src_bytes, dst_bytes = export(args.src / name, args.out / Path(name).name, max_width)
         total_src += src_bytes
         total_dst += dst_bytes
         print(f"  {name:32s} {src_bytes/1e6:5.2f} MB -> {dst_bytes/1e6:5.2f} MB")

@@ -1,9 +1,15 @@
-"""Consolidate raw benchmark run outputs into the canonical results tree.
+"""Consolidate benchmark run outputs into the canonical results tree.
 
-Reads the aggregated per-run summaries under ``results/raw/`` and emits:
+The records are the five-metric grid of the paper: the seeded re-run in which
+every image is scored (``GRID_RUNS``; configs/revision_grid_seeded*.yaml), plus
+the dense-mask localisation (EBPG) of the revision analysis (``EBPG_SUMMARY``).
+Emits:
 
     results/processed/records.json   canonical, validated (model, method) records
     results/processed/manifest.json  coverage + provenance-gap report
+
+Each cell reports its metric's cell statistic over all evaluated images
+(xai_bench/scoring.py): the median for Max-Sensitivity, the mean otherwise.
 
 Rows that do not belong to this benchmark (for example runs of a different
 paper's method) are dropped here, and the drop is reported rather than silent.
@@ -11,7 +17,10 @@ paper's method) are dropped here, and the drop is reported rather than silent.
 Usage::
 
     python scripts/build_results.py
-    python scripts/build_results.py --raw results/raw/benchmark_runs.csv
+    # the superseded July 2026 summaries (unseeded, images with an undefined
+    # metric left out, mean Max-Sensitivity):
+    python scripts/build_results.py --raw results/raw/benchmark_runs.csv --no-ebpg \
+        --out results/archive/july2026
 """
 
 from __future__ import annotations
@@ -36,8 +45,17 @@ from xai_bench.results_schema import (  # noqa: E402
     ResultRecord,
     validate_collection,
 )
+from xai_bench.scoring import cell_statistic  # noqa: E402
 
-DEFAULT_RAW = REPO_ROOT / "results" / "raw" / "benchmark_runs.csv"
+RESULTS = REPO_ROOT / "results"
+#: Run directories of the seeded five-metric grid, each with the runner's
+#: summary.csv and config.json. Every cell comes from exactly one of them.
+GRID_RUNS = ("revision_grid_seeded", "revision_grid_seeded_attnlrp", "revision_grid_seeded_50")
+#: EBPG per cell over the 1,000 images (100 for IG and the perturbation methods),
+#: written by scripts/revision_neucom/analyze_revision.py.
+EBPG_SUMMARY = RESULTS / "revision_neucom" / "analysis" / "summary.json"
+#: Methods defined only on the isotropic ViT, whose class token they read.
+ATTENTION_NATIVE = ("attention_rollout", "attnlrp")
 DEFAULT_COST = REPO_ROOT / "results" / "raw" / "computational_cost.csv"
 OUT_DIR = REPO_ROOT / "results" / "processed"
 
@@ -46,7 +64,8 @@ OUT_DIR = REPO_ROOT / "results" / "processed"
 EXCLUDED_RUN_PREFIXES = ("hilrp",)
 
 
-def _float(raw: str | None) -> float | None:
+def _float(raw: str | float | None) -> float | None:
+    """A finite number, +/-inf, or None for a missing or NaN value."""
     if raw is None or raw == "":
         return None
     try:
@@ -54,6 +73,41 @@ def _float(raw: str | None) -> float | None:
     except ValueError:
         return None
     return None if math.isnan(val) else val
+
+
+def _finite(raw: str | float | None) -> float | None:
+    val = _float(raw)
+    return val if val is not None and math.isfinite(val) else None
+
+
+def _int(raw: str | float | None) -> int | None:
+    val = _finite(raw)
+    return int(val) if val is not None else None
+
+
+def metric_value(row: dict, metric: str) -> MetricValue | None:
+    """The scored cell of one metric from a runner summary row, or None.
+
+    The runner scores every image (xai_bench/scoring.py) and writes the mean,
+    median, standard deviation, count and number of undefined images of the
+    scored values. An unbounded image makes the mean infinite, stored as None;
+    a cell whose median is infinite is stored as unbounded. Summaries without a
+    median (the July 2026 runs) give a mean-only cell.
+    """
+    mean = _float(row.get(f"{metric}_mean"))
+    if mean is None:
+        return None
+    median = _float(row.get(f"{metric}_median"))
+    statistic = cell_statistic(metric) if median is not None else "mean"
+    return MetricValue(
+        mean=_finite(mean),
+        std=_finite(row.get(f"{metric}_std")),
+        count=_int(row.get(f"{metric}_count")),
+        median=_finite(median),
+        statistic=statistic,
+        unbounded=statistic == "median" and math.isinf(median),
+        n_undefined=_int(row.get(f"{metric}_undefined")),
+    )
 
 
 def _is_excluded(source_run: str) -> bool:
@@ -99,29 +153,27 @@ def build_records(rows: list[dict]) -> tuple[list[ResultRecord], dict]:
 
         metrics: dict[str, MetricValue] = {}
         for metric_key in taxonomy.METRICS:
-            mean = _float(row.get(f"{metric_key}_mean"))
-            if mean is None:
-                continue
-            std = _float(row.get(f"{metric_key}_std"))
-            count_raw = _float(row.get(f"{metric_key}_count"))
-            metrics[metric_key] = MetricValue(
-                mean=mean,
-                std=std,
-                count=int(count_raw) if count_raw is not None else None,
-            )
+            mv = metric_value(row, metric_key)
+            if mv is not None:
+                metrics[metric_key] = mv
 
         if not metrics:
             report["dropped_no_metrics"] += 1
             continue
 
         counts = [m.count for m in metrics.values() if m.count is not None]
+        run_cfg = row.get("_config") or {}
+        n_eval = _int(row.get("n_evaluations"))
         rec = ResultRecord(
             model=model,
             method=method,
             metrics=metrics,
             provenance=Provenance(
                 source_run=source_run or None,
-                num_images=max(counts) if counts else None,
+                config_file=row.get("_config_file"),
+                seed=(run_cfg.get("seeds") or [None])[0],
+                dataset=run_cfg.get("dataset"),
+                num_images=n_eval if n_eval is not None else (max(counts) if counts else None),
             ),
         )
         key = (model, method)
@@ -137,6 +189,53 @@ def build_records(rows: list[dict]) -> tuple[list[ResultRecord], dict]:
     report["dropped_unknown_model"] = dict(report["dropped_unknown_model"])
     report["dropped_unknown_method"] = dict(report["dropped_unknown_method"])
     return list(records.values()), report
+
+
+def load_grid_rows(results: Path = RESULTS, runs: tuple[str, ...] = GRID_RUNS) -> list[dict]:
+    """Summary rows of the seeded grid, tagged with their run and configuration."""
+    rows = []
+    for run in runs:
+        summary = results / run / "summary.csv"
+        if not summary.exists():
+            raise SystemExit(f"grid run not found: {summary}")
+        cfg_path = results / run / "config.json"
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
+        config_file = f"configs/{run}.yaml"
+        for row in load_rows(summary):
+            row["source_run"] = f"{run}/summary.csv"
+            row["_config"] = cfg
+            row["_config_file"] = config_file if (REPO_ROOT / config_file).exists() else None
+            rows.append(row)
+    return rows
+
+
+def add_ebpg(records: list[ResultRecord], path: Path = EBPG_SUMMARY) -> int:
+    """Attach the dense-mask EBPG of the revision analysis to the grid records.
+
+    EBPG is scored on the 1,000 images (100 for IG and the perturbation methods);
+    a constant map gets no credit. Attention-native methods are defined only on
+    the isotropic ViT. Returns the number of cells attached.
+    """
+    if not path.exists():
+        raise SystemExit(f"EBPG summary not found: {path} (or pass --no-ebpg)")
+    summary = json.loads(path.read_text(encoding="utf-8"))
+    ebpg = summary["loc_gt_abs"]["ebpg_abs"]
+    counts = summary["loc_n"]
+    source = path.relative_to(REPO_ROOT).as_posix()
+    by_cell = {(r.model, r.method): r for r in records}
+    attached = 0
+    for method, per_model in ebpg.items():
+        for model, raw in per_model.items():
+            rec = by_cell.get((model, method))
+            value = _finite(raw)
+            if rec is None or value is None:
+                continue
+            if method in ATTENTION_NATIVE and taxonomy.model_family(model) != "isotropic_vit":
+                continue
+            rec.metrics["ebpg"] = MetricValue(
+                mean=value, count=_int(counts.get(method, {}).get(model)), source=source)
+            attached += 1
+    return attached
 
 
 
@@ -236,17 +335,24 @@ def build_manifest(
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--raw", type=Path, default=DEFAULT_RAW, help="raw summary CSV")
+    ap.add_argument("--raw", type=Path, default=None,
+                    help="build from a flat summary CSV instead of the seeded grid runs")
+    ap.add_argument("--no-ebpg", action="store_true",
+                    help="do not attach the dense-mask EBPG of the revision analysis")
     ap.add_argument("--cost", type=Path, default=DEFAULT_COST,
                     help="method-level attribution timings CSV")
     ap.add_argument("--out", type=Path, default=OUT_DIR, help="output directory")
     args = ap.parse_args()
 
-    if not args.raw.exists():
-        raise SystemExit(f"raw results not found: {args.raw}")
-
-    rows = load_rows(args.raw)
+    if args.raw is not None:
+        if not args.raw.exists():
+            raise SystemExit(f"raw results not found: {args.raw}")
+        rows = load_rows(args.raw)
+    else:
+        rows = load_grid_rows()
     records, report = build_records(rows)
+    if not args.no_ebpg:
+        report["ebpg_cells"] = add_ebpg(records)
     records.sort(key=lambda r: (r.model, r.method))
 
     # Range violations are reported, not fatal: an unbounded metric such as
@@ -258,8 +364,10 @@ def main() -> int:
         "schema_version": SCHEMA_VERSION,
         "records": [r.to_dict() for r in records],
     }
+    # allow_nan=False: an infinite or NaN value must never reach the website,
+    # whose JSON parser rejects it; an unbounded cell is stored with a flag.
     (args.out / "records.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8"
+        json.dumps(payload, indent=2, allow_nan=False), encoding="utf-8"
     )
     cost = load_cost(args.cost)
     (args.out / "method_cost.json").write_text(

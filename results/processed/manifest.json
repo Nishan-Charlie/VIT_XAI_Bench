@@ -1,23 +1,25 @@
 {
-  "schema_version": "1.0.0",
-  "n_records": 117,
-  "n_models": 10,
-  "n_methods": 14,
+  "schema_version": "1.1.0",
+  "n_records": 90,
+  "n_models": 8,
+  "n_methods": 13,
   "build_report": {
-    "rows_read": 127,
+    "rows_read": 90,
     "dropped_excluded_run": 0,
     "dropped_no_identity": 0,
     "dropped_unknown_model": {},
     "dropped_unknown_method": {},
-    "dropped_no_metrics": 0
+    "dropped_no_metrics": 0,
+    "ebpg_cells": 90
   },
   "metric_coverage": {
-    "faithfulness_correlation": 117,
-    "faithfulness_estimate": 117,
-    "apf": 28,
-    "pointing_game": 117,
-    "max_sensitivity": 117,
-    "sparseness": 117,
+    "faithfulness_correlation": 90,
+    "faithfulness_estimate": 90,
+    "apf": 0,
+    "pointing_game": 90,
+    "ebpg": 90,
+    "max_sensitivity": 90,
+    "sparseness": 90,
     "attribution_time_ms": 13
   },
   "dimensions": {
@@ -27,15 +29,16 @@
         "faithfulness_estimate",
         "apf"
       ],
-      "records_with_data": 262,
+      "records_with_data": 180,
       "status": "measured",
       "granularity": "cell"
     },
     "localization": {
       "metrics": [
-        "pointing_game"
+        "pointing_game",
+        "ebpg"
       ],
-      "records_with_data": 117,
+      "records_with_data": 180,
       "status": "measured",
       "granularity": "cell"
     },
@@ -43,7 +46,7 @@
       "metrics": [
         "max_sensitivity"
       ],
-      "records_with_data": 117,
+      "records_with_data": 90,
       "status": "measured",
       "granularity": "cell"
     },
@@ -51,7 +54,7 @@
       "metrics": [
         "sparseness"
       ],
-      "records_with_data": 117,
+      "records_with_data": 90,
       "status": "measured",
       "granularity": "cell"
     },
@@ -87,6 +90,61 @@
     },
     {
       "model": "convnext_base",
+      "method": "saliency",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
+      "method": "input_x_gradient",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
+      "method": "integrated_gradients",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
+      "method": "smoothgrad",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
+      "method": "vargrad",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
+      "method": "gradient_shap",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
+      "method": "grad_cam",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
+      "method": "grad_cam_plus_plus",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
+      "method": "occlusion",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
+      "method": "rise",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
+      "method": "lime",
+      "reason": "not_run"
+    },
+    {
+      "model": "convnext_base",
       "method": "attention_rollout",
       "reason": "not_applicable"
     },
@@ -107,7 +165,77 @@
     },
     {
       "model": "vit_base_patch16_224",
+      "method": "attention_gradient",
+      "reason": "not_run"
+    },
+    {
+      "model": "vit_base_patch16_224",
       "method": "lrp",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "saliency",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "input_x_gradient",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "integrated_gradients",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "smoothgrad",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "vargrad",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "gradient_shap",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "grad_cam",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "grad_cam_plus_plus",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "occlusion",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "rise",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "lime",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "attention_rollout",
+      "reason": "not_run"
+    },
+    {
+      "model": "deit_base_patch16_224",
+      "method": "attention_gradient",
       "reason": "not_run"
     },
     {
@@ -132,6 +260,11 @@
     },
     {
       "model": "swin_base_patch4_window7_224",
+      "method": "attnlrp",
+      "reason": "not_run"
+    },
+    {
+      "model": "swin_base_patch4_window7_224",
       "method": "lrp",
       "reason": "not_run"
     },
@@ -147,12 +280,12 @@
     },
     {
       "model": "pvt_v2_b2",
-      "method": "lrp",
+      "method": "attnlrp",
       "reason": "not_run"
     },
     {
-      "model": "maxvit_small_tf_224",
-      "method": "gradient_shap",
+      "model": "pvt_v2_b2",
+      "method": "lrp",
       "reason": "not_run"
     },
     {
@@ -167,12 +300,12 @@
     },
     {
       "model": "maxvit_small_tf_224",
-      "method": "lrp",
+      "method": "attnlrp",
       "reason": "not_run"
     },
     {
-      "model": "mobilevitv2_100",
-      "method": "gradient_shap",
+      "model": "maxvit_small_tf_224",
+      "method": "lrp",
       "reason": "not_run"
     },
     {
@@ -187,12 +320,12 @@
     },
     {
       "model": "mobilevitv2_100",
-      "method": "lrp",
+      "method": "attnlrp",
       "reason": "not_run"
     },
     {
-      "model": "efficientvit_b1",
-      "method": "gradient_shap",
+      "model": "mobilevitv2_100",
+      "method": "lrp",
       "reason": "not_run"
     },
     {
@@ -204,6 +337,11 @@
       "model": "efficientvit_b1",
       "method": "attention_gradient",
       "reason": "not_applicable"
+    },
+    {
+      "model": "efficientvit_b1",
+      "method": "attnlrp",
+      "reason": "not_run"
     },
     {
       "model": "efficientvit_b1",
@@ -212,11 +350,6 @@
     },
     {
       "model": "efficientvit_b2",
-      "method": "gradient_shap",
-      "reason": "not_run"
-    },
-    {
-      "model": "efficientvit_b2",
       "method": "attention_rollout",
       "reason": "not_applicable"
     },
@@ -224,6 +357,11 @@
       "model": "efficientvit_b2",
       "method": "attention_gradient",
       "reason": "not_applicable"
+    },
+    {
+      "model": "efficientvit_b2",
+      "method": "attnlrp",
+      "reason": "not_run"
     },
     {
       "model": "efficientvit_b2",
@@ -232,15 +370,12 @@
     }
   ],
   "provenance_gaps": {
-    "config_file": 117,
-    "git_commit": 117,
-    "seed": 117,
-    "dataset": 117,
-    "timestamp": 117,
-    "python_version": 117,
-    "torch_version": 117,
-    "cuda_version": 117,
-    "gpu_name": 117
+    "git_commit": 90,
+    "timestamp": 90,
+    "python_version": 90,
+    "torch_version": 90,
+    "cuda_version": 90,
+    "gpu_name": 90
   },
   "validation_problems": [],
   "cost_methods": 13
