@@ -44,7 +44,8 @@ N = int(sys.argv[2])
 methods = sys.argv[3].split(",")
 if "attnlrp" in methods and len(methods) > 1:
     raise SystemExit("attnlrp must run in its own process")
-SAVE_MAPS_N = 100   # signed maps of the first 100 images kept for the faithfulness study
+# signed maps of the first SAVE_MAPS_N images are kept for the faithfulness study (ffe.py)
+SAVE_MAPS_N = int(os.environ.get("SAVE_MAPS_N", "100"))
 
 data = load_data(N)
 mw = load_model(model_name)
@@ -116,8 +117,16 @@ for meth in methods:
             print(f"{model_name} {meth} {k}/{len(data)} ({time.time() - t_start:.0f}s)", flush=True)
     fh.flush()
     if saved:
-        np.savez_compressed(os.path.join(OUT, "maps", f"{model_name}__{meth}.npz"),
-                            **{str(i): v for i, v in saved.items()})
+        # merge with the maps of an earlier (resumed) call instead of overwriting them;
+        # maps of rows written before a crash are filled in by maps.py
+        fp = os.path.join(OUT, "maps", f"{model_name}__{meth}.npz")
+        os.makedirs(os.path.dirname(fp), exist_ok=True)
+        merged = {}
+        if os.path.exists(fp):
+            with np.load(fp) as z:
+                merged = {k: z[k] for k in z.files}
+        merged.update({str(i): v for i, v in saved.items()})
+        np.savez_compressed(fp, **merged)
     torch.cuda.empty_cache()
 fh.close()
 print("DONE", out_csv)

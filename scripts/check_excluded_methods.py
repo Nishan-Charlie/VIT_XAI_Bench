@@ -7,8 +7,7 @@ it scans code, configuration and result data for references and exits non-zero
 if any are found.
 
 A small set of files legitimately name the method *in order to document its
-removal* — this record, the README's integrity section, the quarantine notice,
-and the exclusion logic itself. Those are allow-listed by path.
+removal* — this record, the quarantine notice, and the exclusion logic itself. Those are allow-listed by path.
 
 Usage::
 
@@ -37,7 +36,6 @@ SKIP_DIRS = {
 
 #: Files that document the removal and must therefore be allowed to name it.
 ALLOWED = {
-    Path("README.md"),
     Path("docs/scientific_integrity.md"),
     Path("figures/_unverified/README.md"),
     Path(".github/workflows/ci.yml"),
