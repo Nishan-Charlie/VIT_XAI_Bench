@@ -14,6 +14,7 @@ usage: python loc.py MODEL N METHOD[,METHOD...]
 AttnLRP must run alone in its own process (class-level patches; see
 xai_bench/isolation.py).
 """
+# ruff: noqa: B023  (the retried closures are called at once, inside their loop iteration)
 import csv
 import os
 import sys
@@ -35,6 +36,7 @@ from common import (
     load_model,
     protocol_maps,
     record_failure,
+    retry_on_gpu_oom,
     set_seed,
     signed_attribution,
 )
@@ -87,11 +89,16 @@ for meth in methods:
             target = d["label"] if mode == "gt" else preds[k]
             if mode == "pred" and target == d["label"]:
                 continue  # identical to the gt row; filled in by the analysis
-            set_seed(evaluation_seed(0, model_name, meth, d["idx"]))
             x = d["image"].unsqueeze(0).to(DEVICE)
-            t0 = time.time()
+
+            def attribute():
+                set_seed(evaluation_seed(0, model_name, meth, d["idx"]))
+                t0 = time.time()
+                m = signed_attribution(meth, mw, x, target, registry_fn=reg).float()
+                return m, (time.time() - t0) * 1000
+
             try:
-                a = signed_attribution(meth, mw, x, target, registry_fn=reg).float()
+                a, dt = retry_on_gpu_oom(attribute)
             except RuntimeError as e:
                 if "CUDA error" in str(e) or "illegal" in str(e) or "CUBLAS" in str(e):
                     fh.flush()
@@ -100,7 +107,6 @@ for meth in methods:
                 record_failure("loc", model_name, meth, d["idx"], e, target_mode=mode)
                 torch.cuda.empty_cache()
                 continue
-            dt = (time.time() - t0) * 1000
             row = dict(model=model_name, method=meth, idx=d["idx"], label=d["label"], pred=preds[k],
                        correct=int(preds[k] == d["label"]), target_mode=mode, target=target,
                        time_ms=round(dt, 1), degenerate=int(is_degenerate(a)))

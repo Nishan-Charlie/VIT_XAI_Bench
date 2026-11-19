@@ -8,7 +8,8 @@ Runner
   * a resumed run retries the failed evaluations;
   * a metric that raises leaves the other metrics of the row intact;
   * a method that cannot be set up is listed in failures.json;
-  * attribution time is recorded per row and summarised in summary.csv.
+  * attribution time is recorded per row and summarised in summary.csv;
+  * on a GPU, an evaluation that ran out of memory is repeated, not recorded as failed.
 Grad-CAM
   * on a class-token ViT the spatial tokens of forward_features receive zero
     gradient (the July-November 2026 bug), and the bench's Grad-CAM reads a layer
@@ -234,3 +235,46 @@ def test_vit_receives_its_own_input_statistics():
 def test_imagenet_statistics_models_are_left_unwrapped():
     mw = create_timm_model("resnet18", pretrained=False)
     assert not isinstance(mw.model, InputStatsAdapter)
+
+
+@pytest.mark.parametrize("failure", [
+    {"error": "OutOfMemoryError: CUDA out of memory. Tried to allocate 2.00 MiB."},
+    {"error": "RuntimeError: CUDA error: CUBLAS_STATUS_ALLOC_FAILED when calling `cublasCreate(handle)`"},
+    {"metric_errors": {"max_sensitivity": "OutOfMemoryError: CUDA out of memory."}},
+])
+def test_gpu_memory_failure_is_repeated(tmp_path, monkeypatch, failure):
+    monkeypatch.setenv("XAI_OOM_WAIT_S", "0")
+    runner = BenchmarkRunner(RunConfig(models=[], methods=[], metrics=[], output_dir=str(tmp_path),
+                                       run_name="oom", device="cpu"))
+    runner.device = type("Gpu", (), {"type": "cuda"})()
+    rows = [dict(image_idx=0, **failure), dict(image_idx=0, **failure), {"image_idx": 0, "m": 1.0}]
+    calls = []
+
+    def evaluate(*args):
+        calls.append(args)
+        return rows[len(calls) - 1]
+
+    monkeypatch.setattr(runner, "_evaluate_one", evaluate)
+    assert runner._evaluate_waiting_for_memory("same", "arguments") == {"image_idx": 0, "m": 1.0}
+    assert calls == [("same", "arguments")] * 3
+
+
+def test_other_failures_are_not_repeated(tmp_path, monkeypatch):
+    runner = BenchmarkRunner(RunConfig(models=[], methods=[], metrics=[], output_dir=str(tmp_path),
+                                       run_name="other", device="cpu"))
+    runner.device = type("Gpu", (), {"type": "cuda"})()
+    calls = []
+    monkeypatch.setattr(runner, "_evaluate_one",
+                        lambda *a: calls.append(a) or {"image_idx": 0, "error": "ValueError: bad layer"})
+    assert runner._evaluate_waiting_for_memory()["error"] == "ValueError: bad layer"
+    assert len(calls) == 1
+
+
+def test_save_replaces_results_atomically(tmp_path):
+    runner = BenchmarkRunner(RunConfig(models=[], methods=[], metrics=[], output_dir=str(tmp_path),
+                                       run_name="save", device="cpu"))
+    runner._save([{"image_idx": 0}])
+    runner._save([{"image_idx": 0}, {"image_idx": 1}])
+    files = sorted(p.name for p in (tmp_path / "save").iterdir())
+    assert "results.json" in files and not any(f.endswith(".tmp") for f in files)
+    assert len(json.loads((tmp_path / "save" / "results.json").read_text(encoding="utf-8"))) == 2

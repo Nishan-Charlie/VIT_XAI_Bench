@@ -10,6 +10,7 @@ evaluation_seed(0, model, method, image).
 usage: python maps.py MODEL N METHOD[,METHOD...]
 AttnLRP must run alone in its own process (class-level patches).
 """
+# ruff: noqa: B023  (the retried closures are called at once, inside their loop iteration)
 import os
 import sys
 import time
@@ -25,6 +26,7 @@ from common import (
     load_data,
     load_model,
     record_failure,
+    retry_on_gpu_oom,
     set_seed,
     signed_attribution,
 )
@@ -62,10 +64,14 @@ for meth in methods:
     reg = METHODS.get(meth)(model_wrapper=mw, model=mw.model) if meth == "attnlrp" else None
     t_start = time.time()
     for k, d in enumerate(todo):
-        set_seed(evaluation_seed(0, model_name, meth, d["idx"]))
         x = d["image"].unsqueeze(0).to(DEVICE)
+
+        def attribute():
+            set_seed(evaluation_seed(0, model_name, meth, d["idx"]))
+            return signed_attribution(meth, mw, x, d["label"], registry_fn=reg).float()
+
         try:
-            a = signed_attribution(meth, mw, x, d["label"], registry_fn=reg).float()
+            a = retry_on_gpu_oom(attribute)
         except RuntimeError as e:
             if "CUDA error" in str(e) or "illegal" in str(e) or "CUBLAS" in str(e):
                 save(fp, maps)
