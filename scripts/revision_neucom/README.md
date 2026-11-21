@@ -28,12 +28,15 @@ For example:
 
 ```bash
 python scripts/revision_neucom/loc.py resnet50 1000 saliency,grad_cam
-python scripts/revision_neucom/ms.py vit_base_patch16_224 100 0,1,2 10 grad_cam,grad_cam_plus_plus
+python scripts/revision_neucom/ms.py vit_base_patch16_224 500 0,1,2 10 grad_cam,grad_cam_plus_plus
 python scripts/revision_neucom/analyze_revision.py
 python scripts/revision_neucom/fig_revision.py
 ```
 
-`extend_1000.sh` and `queue_lean.sh` are the queues that produced the committed
-results. AttnLRP patches timm classes, so it must run alone, in its own process.
+`extend_1000.sh` and `queue_lean.sh` are the queues that produced the first
+results; `queue_500.py` (with `prefill_500.py`) extended them and the grid to
+500 images, and the localisation of all 13 methods to 1,000 images.
+`image_stability.py` measures how much the rankings depend on the images drawn, and
+`fig_method_family.py` draws the method taxonomy figure. AttnLRP patches timm classes, so it must run alone, in its own process.
 Each run resumes where it stopped, and a failed image is appended to
 `results/revision_neucom/failures.csv` rather than skipped silently.
