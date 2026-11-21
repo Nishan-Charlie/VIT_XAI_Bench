@@ -178,9 +178,8 @@
         its sample count, the images scored by rule, and its source.
       </p>
       <p class="note scoring-note">
-        <b>How a cell is scored.</b> Every evaluated image enters every cell: 100
-        images for ResNet-50 and ViT-B/16 and 50 for the other backbones (EBPG: 1,000,
-        or 100 for Integrated Gradients and the perturbation methods). A method can
+        <b>How a cell is scored.</b> Every evaluated image enters every cell: the
+        first 500 images on every backbone and for every method (EBPG: all 1,000). A method can
         return a constant map, on which the metrics are undefined; that image gets no
         credit (0) rather than being left out. On Max-Sensitivity it counts as a
         robustness failure, and because that metric is unbounded and heavy-tailed its
@@ -350,7 +349,7 @@
           blows up or, after the final ReLU, collapses to zero: on MaxViT-S, Grad-CAM++
           returns a constant map on 71% of the 1,000 images, and its Max-Sensitivity is
           unbounded (&infin;). Bounding the weights tames the blow-up on the class-token
-          ViTs (ViT-B/16: median 7.6 &rarr; 0.5) but not the collapse on MaxViT.
+          ViTs (ViT-B/16: median 6.25 &rarr; 0.50) but not the collapse on MaxViT.
           <span class="figcaption-src">Source:
           <code>scripts/revision_neucom/gcpp.py</code>, <code>ms.py</code>,
           <code>fig_revision.py</code></span>
@@ -434,7 +433,7 @@
           <div>
             <dt>Images</dt>
             <dd>A fixed set of 1,000 (161 classes); the five-metric grid uses the
-                leading 100 (ResNet-50, ViT-B/16) or 50 (other backbones)</dd>
+                leading 500 on every backbone</dd>
           </div>
           <div>
             <dt>Redistributed here</dt>
@@ -500,8 +499,8 @@ cd VIT_XAI_Bench
 pip install -e ".[dev]"
 
 python scripts/smoke_test.py            # verify the install, ~30 s on CPU
-python -m xai_bench.runner --config configs/revision_grid_seeded.yaml
-                                        # the grid (also _attnlrp and _50)
+python -m xai_bench.runner --config configs/revision_grid_500.yaml
+                                        # the grid (AttnLRP: revision_grid_500_attnlrp.yaml)
 python scripts/build_results.py         # runs      -> canonical records
 python scripts/validate_results.py      # schema + range + duplicate checks
 python scripts/export_web_data.py       # records   -> this website</code></pre>

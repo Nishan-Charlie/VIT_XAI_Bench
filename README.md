@@ -13,8 +13,8 @@ Sathiyamohan Nishankar · Nethmi Pathirana · Pubudu Sanjeewani · Asanka Perera
 [Reproducibility guide](docs/reproducibility.md)
 
 Attribution-method rankings measured on CNNs **do not transfer** to transformer
-backbones. Of the 11 methods that run on every backbone, **all 11 change rank**
-between ResNet-50 and the transformers under the Pointing Game, and **8 of 11**
+backbones. Of the 11 methods that run on every backbone, **10 change rank**
+between ResNet-50 and the transformers under the Pointing Game, and **8**
 under the dense-mask Energy-Based Pointing Game (EBPG).
 
 ![Grad-CAM across six benchmark backbones on three images](figures/bench/bench_qualitative.png)
@@ -25,15 +25,15 @@ EfficientViT variants._
 
 ## Main findings
 
-- **The Pointing Game saturates.** A random peak already scores about 0.6. Under
-  EBPG no method exceeds 0.60.
+- **The Pointing Game saturates.** A random peak already scores 0.53, the mean
+  box area. Under EBPG no method exceeds 0.60.
 - **Grad-CAM fails on linear attention.** Its EBPG on EfficientViT-B2 is 0.25,
   below the 0.31 of a random map.
 - **Grad-CAM++ can be unstable.** Its closed-form weights have a pole, and near
   it the map collapses or blows up. On MaxViT-S the map is zero on 71% of the
   1,000 images.
 - **Architecture family matters more than size.** Over 21 backbones, the family
-  explains 85% of the variance of Grad-CAM EBPG and 87% of its ranked median
+  explains 85% of the variance of Grad-CAM EBPG and 89% of its ranked median
   Max-Sensitivity. Parameter count alone explains less than 1% of either.
 - **Faithfulness Correlation barely separates methods.** Its values cluster near
   zero across the whole grid.
@@ -56,9 +56,8 @@ EfficientViT variants._
 | **Metrics** | Faithfulness Correlation, Faithfulness Estimate, Pointing Game, EBPG, Max-Sensitivity, Sparseness, attribution time |
 | **Dataset** | 1,000 validation images of [ImageNet-S](https://github.com/LUSSeg/ImageNet-S) |
 
-The five-metric grid uses the first 100 images for ResNet-50 and ViT-B/16 and
-the first 50 for the other backbones. EBPG uses all 1,000 images, except for
-Integrated Gradients and the perturbation methods (first 100).
+The five-metric grid uses the first 500 images, on every backbone and for every
+method. EBPG and the other one-map-per-image analyses use all 1,000 images.
 
 ## Quick start
 
@@ -76,10 +75,14 @@ To re-run the grid, prepare the data and start a run:
 ```bash
 pip install -e ".[data]"
 python scripts/cache_imagenets.py
-python -m xai_bench.runner --config configs/revision_grid_seeded.yaml
+python -m xai_bench.runner --config configs/revision_grid_500.yaml
+python -m xai_bench.runner --config configs/revision_grid_500_attnlrp.yaml
 ```
 
-The grid took about 16 hours on one RTX 4070 Laptop GPU. The
+The 500-image grid took about 140 GPU-hours on RTX A6000 GPUs for ViT-B/16,
+Swin-B, PVT-v2 and MaxViT-S, and about three days on an RTX 4070 Laptop GPU for
+the other four backbones; `scripts/revision_neucom/queue_500.py` splits it into
+shards that can run on several GPUs. The
 [reproducibility guide](docs/reproducibility.md) covers the remaining configs,
 the output format, expected runtimes and known limits.
 

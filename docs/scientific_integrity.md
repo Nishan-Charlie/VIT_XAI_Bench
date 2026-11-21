@@ -99,7 +99,7 @@ CI runs all three in the `results-integrity` job.
 The July 2026 audit and the November 2026 revision found defects that affect
 values, not just ergonomics. All are fixed in the current code, and **the
 published result set was produced again with it**: the five-metric grid in
-`results/revision_grid_seeded*/` and the localisation, robustness and CAM
+`results/revision_grid_500/` and the localisation, robustness and CAM
 analyses in `results/revision_neucom/`. The July summaries, which carry the
 effects of §2.1–2.3 and §2.5, stay in `results/raw/benchmark_runs.csv` for the
 record only; no figure, table or web page is built from them.
@@ -240,6 +240,6 @@ as the older, standalone script; no published number comes from it.
 | 13 attribution methods | 13: the 11 methods defined on every backbone, plus Attention Rollout and AttnLRP on ViT-B/16 |
 | 8 representative backbones | 8 |
 | 5 evaluation dimensions | 5: faithfulness, localisation, robustness and complexity per cell; computational cost per method |
-| 1,000 evaluation images | EBPG on the 1,000 (100 for IG and the perturbation methods); the five-metric grid on the leading 100 (ResNet-50, ViT-B/16) or 50 images |
+| 1,000 evaluation images | EBPG and the other one-map-per-image analyses on all 1,000; the five-metric grid, the faithfulness protocols and the multi-seed robustness analysis on the leading 500, for every backbone and method |
 
 The website and figures report the counts found in the data.

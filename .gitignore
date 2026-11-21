@@ -66,9 +66,13 @@ results/revision_neucom/maps/
 !results/revision_vit_native/
 !results/revision_gradshap_fill/
 
-# The seeded five-metric grid that records.json is built from, with its per-image
-# rows, so that the scoring of every image can be checked (results.json duplicates
-# results.csv and stays untracked).
+# The five-metric grid that records.json is built from (500 images, every backbone
+# and method), with its per-image rows, so that the scoring of every image can be
+# checked (results.json duplicates results.csv and stays untracked). The earlier
+# 100/50-image seeded runs are kept because prefill_500.py extends them.
+!results/revision_grid_500/
+!results/revision_grid_500/results.csv
+results/revision_grid_500_shards/
 !results/revision_grid_seeded/
 !results/revision_grid_seeded_attnlrp/
 !results/revision_grid_seeded_50/

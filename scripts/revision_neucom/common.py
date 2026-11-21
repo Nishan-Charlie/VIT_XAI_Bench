@@ -7,8 +7,10 @@ post-processing protocols (abs / positive-only / signed) can be scored from the
 same attribution. ``to_registry_map`` reproduces the registry output exactly.
 """
 import csv
+import gc
 import os
 import sys
+import time
 import warnings
 import zlib
 
@@ -48,9 +50,9 @@ SHORT = {"resnet50": "RN-50", "vit_base_patch16_224": "ViT-B/16",
          "swin_base_patch4_window7_224": "Swin-B", "pvt_v2_b2": "PVT-v2",
          "maxvit_small_tf_224": "MaxViT-S", "mobilevitv2_100": "MobileViT",
          "efficientvit_b1": "EffViT-B1", "efficientvit_b2": "EffViT-B2"}
-# The main five-metric grid used the first 100 images for RN-50 and ViT-B/16 and the
-# first 50 for the other six backbones (see results/*/config.json).
-MAIN_GRID_N = {m: (100 if m in ("resnet50", "vit_base_patch16_224") else 50) for m in MAIN_MODELS}
+# The main five-metric grid uses the first 500 images of every backbone
+# (results/revision_grid_500; earlier: 100 for RN-50 and ViT-B/16, 50 for the others).
+MAIN_GRID_N = dict.fromkeys(MAIN_MODELS, 500)
 
 SIGNED_METHODS = {"integrated_gradients", "input_x_gradient", "gradient_shap",
                   "occlusion", "lime", "attnlrp"}
@@ -60,6 +62,25 @@ LIME_PPE = int(os.environ.get("LIME_PPE", "25"))  # LIME forward passes per batc
 def evaluation_seed(seed, model_name, method_name, image_idx):
     """Same derivation as xai_bench.runner.evaluation_seed."""
     return zlib.crc32(f"{seed}|{model_name}|{method_name}|{image_idx}".encode())
+
+
+def retry_on_gpu_oom(compute, retries=None, wait=None):
+    """Call compute(), waiting and repeating while the GPU is out of memory. On a shared
+    GPU another process can take the memory at any moment; compute() must set its own
+    seed, so that a repeat gives the result of an undisturbed call."""
+    retries = int(os.environ.get("XAI_OOM_RETRIES", "60")) if retries is None else retries
+    wait = float(os.environ.get("XAI_OOM_WAIT_S", "60")) if wait is None else wait
+    for attempt in range(retries + 1):
+        try:
+            return compute()
+        except RuntimeError as e:
+            text = str(e)
+            if attempt == retries or not ("out of memory" in text.lower() or "ALLOC_FAILED" in text):
+                raise
+            print(f"  GPU out of memory; waiting {wait:.0f} s (retry {attempt + 1} of {retries})", flush=True)
+        gc.collect()
+        torch.cuda.empty_cache()
+        time.sleep(wait)
 
 
 FAILURES_CSV = os.path.join(OUT, "failures.csv")

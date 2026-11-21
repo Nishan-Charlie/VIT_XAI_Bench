@@ -11,6 +11,7 @@ usage: python ms.py MODEL N SEEDS(0,1,2) K METHOD[,METHOD...]
 pseudo-method 'grad_cam_plus_plus_stab': Grad-CAM++ with |2 + S*g| >= 1, i.e.
 alpha bounded by 1; differs from Grad-CAM++ only near the pole of alpha.
 """
+# ruff: noqa: B023  (the retried closures are called at once, inside their loop iteration)
 import csv
 import os
 import sys
@@ -27,6 +28,7 @@ from common import (
     load_data,
     load_model,
     record_failure,
+    retry_on_gpu_oom,
     set_seed,
     signed_attribution,
 )
@@ -77,19 +79,25 @@ for meth in methods:
         for k, d in enumerate(data):
             if (meth, seed, d["idx"]) in done:
                 continue
-            set_seed(evaluation_seed(seed, model_name, meth, d["idx"]))
             x = d["image"].unsqueeze(0).to(DEVICE)
-            t0 = time.time()
-            try:
+
+            def measure():
+                set_seed(evaluation_seed(seed, model_name, meth, d["idx"]))
+                t0 = time.time()
                 a = f(x, d["label"]).detach()
                 an = float(torch.linalg.norm(a))
-                row = dict(model=model_name, method=meth, seed=seed, idx=d["idx"], label=d["label"],
-                           a_norm=an, degenerate=int(not np.isfinite(an) or float(a.max() - a.min()) == 0))
+                r = dict(model=model_name, method=meth, seed=seed, idx=d["idx"], label=d["label"],
+                         a_norm=an, degenerate=int(not np.isfinite(an) or float(a.max() - a.min()) == 0))
                 for j in range(K):
                     noise = np.random.uniform(low=-0.2, high=0.2, size=tuple(x.shape))
                     xp = x + torch.tensor(noise, dtype=x.dtype, device=x.device)
                     ap = f(xp, d["label"]).detach()
-                    row[f"s{j}"] = float(torch.linalg.norm(ap - a) / an) if an > 0 else np.nan
+                    r[f"s{j}"] = float(torch.linalg.norm(ap - a) / an) if an > 0 else np.nan
+                r["time_ms"] = round((time.time() - t0) * 1000, 1)
+                return r
+
+            try:
+                row = retry_on_gpu_oom(measure)
             except RuntimeError as e:
                 if "CUDA error" in str(e) or "illegal" in str(e) or "CUBLAS" in str(e):
                     fh.flush()
@@ -98,7 +106,6 @@ for meth in methods:
                 record_failure("ms", model_name, meth, d["idx"], e, seed=seed)
                 torch.cuda.empty_cache()
                 continue
-            row["time_ms"] = round((time.time() - t0) * 1000, 1)
             w.writerow(row)
             if k % 25 == 0:
                 fh.flush()

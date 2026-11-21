@@ -24,6 +24,7 @@ Design points that matter scientifically:
 from __future__ import annotations
 
 import datetime
+import gc
 import json
 import math
 import os
@@ -67,6 +68,11 @@ def _sync(device: torch.device) -> None:
 
 def _error_text(exc: Exception) -> str:
     return f"{type(exc).__name__}: {exc}"[:300]
+
+
+def is_gpu_memory_error(text: str) -> bool:
+    """True for the messages of a GPU that has run out of memory."""
+    return "out of memory" in text.lower() or "ALLOC_FAILED" in text
 
 
 class BenchmarkRunner:
@@ -179,8 +185,19 @@ class BenchmarkRunner:
             json.dump({"method_init": init_failures, "evaluations": evals}, fh, indent=2)
 
     def _save(self, results: list[dict]) -> None:
-        with open(os.path.join(self.run_dir, "results.json"), "w", encoding="utf-8") as fh:
+        """Replace results.json atomically: a run killed while saving keeps its rows."""
+        path = os.path.join(self.run_dir, "results.json")
+        tmp = f"{path}.{os.getpid()}.tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
             json.dump(results, fh, indent=2)
+        for attempt in range(10):
+            try:
+                os.replace(tmp, path)
+                return
+            except PermissionError:      # Windows: another process is reading the file
+                if attempt == 9:
+                    raise
+                time.sleep(1)
 
     def _resume(self) -> tuple[list[dict], set]:
         """Rows of a previous attempt, without its failures, which are retried."""
@@ -240,7 +257,7 @@ class BenchmarkRunner:
                 for seed, i in tqdm(evals, desc=f"    {method_name}"):
                     if (model_name, method_name, i, seed) in done:
                         continue
-                    results.append(self._evaluate_one(
+                    results.append(self._evaluate_waiting_for_memory(
                         dataset, i, seed, model_wrapper, model_name, method, method_name))
                     self._save(results)
 
@@ -263,6 +280,30 @@ class BenchmarkRunner:
                   "that could not be set up; see failures.json. Rerun to retry the failed "
                   "evaluations.")
         return results
+
+    def _evaluate_waiting_for_memory(self, *args) -> dict[str, Any]:
+        """Evaluate, waiting and repeating while the GPU is out of memory.
+
+        On a shared GPU another process can take the memory at any moment, which
+        says nothing about the method. The evaluation reseeds itself, so a repeat
+        gives the row it would have given. XAI_OOM_RETRIES and XAI_OOM_WAIT_S set
+        the patience (default: an hour); after that the failure is recorded as usual.
+        """
+        retries = int(os.environ.get("XAI_OOM_RETRIES", "60"))
+        wait = float(os.environ.get("XAI_OOM_WAIT_S", "60"))
+        for attempt in range(retries + 1):
+            row = self._evaluate_one(*args)
+            messages = [row.get("error") or "", *row.get("metric_errors", {}).values()]
+            if (self.device.type != "cuda" or attempt == retries
+                    or not any(is_gpu_memory_error(m) for m in messages)):
+                return row
+            print(f"    GPU out of memory on image {row['image_idx']}; waiting {wait:.0f} s "
+                  f"(retry {attempt + 1} of {retries})")
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            time.sleep(wait)
+        return row
 
     def _evaluate_one(self, dataset, idx: int, seed: int, model_wrapper, model_name: str,
                       method, method_name: str) -> dict[str, Any]:

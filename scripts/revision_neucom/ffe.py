@@ -8,6 +8,7 @@ changes between protocols.
 
 usage: python ffe.py MODEL N METHOD[,METHOD...]
 """
+# ruff: noqa: B023  (the retried closures are called at once, inside their loop iteration)
 import csv
 import os
 import sys
@@ -15,7 +16,7 @@ import sys
 import numpy as np
 import quantus
 import torch
-from common import DEVICE, OUT, evaluation_seed, load_data, load_model, set_seed
+from common import DEVICE, OUT, evaluation_seed, load_data, load_model, retry_on_gpu_oom, set_seed
 
 model_name, N = sys.argv[1], int(sys.argv[2])
 methods = sys.argv[3].split(",")
@@ -44,10 +45,13 @@ for meth in methods:
             res = {}
             for mname, cls, kw in (("fc", quantus.FaithfulnessCorrelation, dict(nr_runs=20, subset_size=224)),
                                    ("fe", quantus.FaithfulnessEstimate, dict(features_in_step=448))):
-                set_seed(evaluation_seed(0, model_name, f"{meth}|{proto}|{mname}", b[0]))
-                metric = cls(disable_warnings=True, display_progressbar=False, return_aggregate=False, **kw)
+                def score():
+                    set_seed(evaluation_seed(0, model_name, f"{meth}|{proto}|{mname}", b[0]))
+                    metric = cls(disable_warnings=True, display_progressbar=False, return_aggregate=False, **kw)
+                    return metric(model=mw.model, x_batch=x[ok], y_batch=y[ok], a_batch=a[ok], device=DEVICE)
+
                 try:
-                    res[mname] = metric(model=mw.model, x_batch=x[ok], y_batch=y[ok], a_batch=a[ok], device=DEVICE)
+                    res[mname] = retry_on_gpu_oom(score)
                 except Exception as e:
                     print("fail", meth, proto, mname, str(e)[:150])
                     res[mname] = [np.nan] * int(ok.sum())
