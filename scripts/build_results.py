@@ -1,7 +1,7 @@
 """Consolidate benchmark run outputs into the canonical results tree.
 
 The records are the five-metric grid of the paper: the seeded re-run in which
-every image is scored (``GRID_RUNS``; configs/revision_grid_seeded*.yaml), plus
+every image is scored (``GRID_RUNS``; configs/revision_grid_500*.yaml), plus
 the dense-mask localisation (EBPG) of the revision analysis (``EBPG_SUMMARY``).
 Emits:
 
@@ -49,9 +49,11 @@ from xai_bench.scoring import cell_statistic  # noqa: E402
 
 RESULTS = REPO_ROOT / "results"
 #: Run directories of the seeded five-metric grid, each with the runner's
-#: summary.csv and config.json. Every cell comes from exactly one of them.
-GRID_RUNS = ("revision_grid_seeded", "revision_grid_seeded_attnlrp", "revision_grid_seeded_50")
-#: EBPG per cell over the 1,000 images (100 for IG and the perturbation methods),
+#: summary.csv and config.json. Every cell comes from exactly one of them: the first
+#: 500 images of every backbone and method (the earlier 100/50-image seeded runs,
+#: results/revision_grid_seeded*, are superseded and only feed prefill_500.py).
+GRID_RUNS = ("revision_grid_500",)
+#: EBPG per cell over the 1,000 images (all 13 methods),
 #: written by scripts/revision_neucom/analyze_revision.py.
 EBPG_SUMMARY = RESULTS / "revision_neucom" / "analysis" / "summary.json"
 #: Methods defined only on the isotropic ViT, whose class token they read.
