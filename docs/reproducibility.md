@@ -124,15 +124,17 @@ Configuration is YAML; every field can be overridden on the command line.
 python -m xai_bench.runner --config configs/smoke_5metrics.yaml --seed 42
 
 # The published five-metric grid (seed 0)
-python -m xai_bench.runner --config configs/revision_grid_500.yaml          # eight backbones, 500 images
-python -m xai_bench.runner --config configs/revision_grid_500_attnlrp.yaml  # AttnLRP on ViT-B/16
+python -m xai_bench.runner --config configs/revision_grid_1000.yaml          # eight backbones, 1,000 images
+python -m xai_bench.runner --config configs/revision_grid_1000_attnlrp.yaml  # AttnLRP on ViT-B/16
 ```
 
 The full grid is long; `scripts/revision_neucom/queue_500.py` splits it into
 shards (backbone x method group) that several GPUs can work through, and
-`scripts/revision_neucom/prefill_500.py` seeds each shard with the rows of the
-earlier 100/50-image runs (`results/revision_grid_seeded*`), whose evaluations
-are identical, so only the missing images are computed. See
+`scripts/revision_neucom/prefill_500.py` and `prefill_1000.py` seed each shard
+with the rows of the earlier runs on 100/50 and 500 images
+(`results/revision_grid_seeded*`, `results/revision_grid_500`), whose evaluations
+are identical, so only the missing images are computed (`QUEUE_N=1000` selects the
+1,000-image queue). See
 `scripts/revision_neucom/README.md`.
 
 Available overrides: `--seed`, `--num-images`, `--device`, `--run-name`,
@@ -169,13 +171,15 @@ row is kept.
 | Run | Hardware | Time |
 |---|---|---|
 | `smoke_5metrics.yaml` | any | minutes |
-| `revision_grid_500*.yaml`, ViT-B/16, Swin-B, PVT-v2, MaxViT-S | RTX A6000 GPUs | about 140 GPU-hours |
-| `revision_grid_500*.yaml`, ResNet-50, MobileViT-v2, EfficientViT-B1/B2 | one RTX 4070 Laptop GPU (8 GB) | about three days |
+| `revision_grid_1000*.yaml` with the faithfulness and robustness analyses, eight backbones, 1,000 images | RTX A6000, RTX 6000 Ada and RTX 3090 Ti GPUs, one RTX 4070 Laptop GPU (8 GB) | several hundred GPU-hours |
 
 On an 8 GB laptop GPU, run one worker at a time: two CUDA processes on the same
 laptop GPU produced driver faults. Single-image FC and FE values differ between
 GPU models by about 0.01-0.02 (median), from floating-point differences, and
-average out over the images of a cell.
+average out over the images of a cell. The FE of Occlusion can differ by up to
+about 0.1 on a single image, because Occlusion produces tied attribution values
+whose order depends on these differences; single-image Occlusion FE is therefore
+reproducible only on the same GPU model, while its cell means are not affected.
 
 Occlusion, LIME, RISE and Max-Sensitivity dominate, because each re-explains or
 re-evaluates the image many times. Per-attribution times are in every
@@ -289,7 +293,7 @@ Stated plainly rather than papered over.
 
 | Item | Status | Why |
 |---|---|---|
-| The published records | **Re-derivable** from the committed runs (`results/revision_grid_500/`, `results/revision_neucom/analysis/summary.json`). | — |
+| The published records | **Re-derivable** from the committed runs (`results/revision_grid_1000/`, `results/revision_neucom/analysis/summary.json`). | — |
 | Per-image rows | **Committed** for the seeded grid (`results.csv`) and for every revision analysis. | — |
 | Re-running the benchmark end to end | **Blocked without user-supplied data.** | ImageNet-S images are not redistributable. |
 | Robustness / faithfulness *curves* | **Not available.** | Only aggregated scalars are stored; curves need a per-perturbation sweep. |

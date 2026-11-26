@@ -179,7 +179,7 @@
       </p>
       <p class="note scoring-note">
         <b>How a cell is scored.</b> Every evaluated image enters every cell: the
-        first 500 images on every backbone and for every method (EBPG: all 1,000). A method can
+        1,000 images on every backbone and for every method. A method can
         return a constant map, on which the metrics are undefined; that image gets no
         credit (0) rather than being left out. On Max-Sensitivity it counts as a
         robustness failure, and because that metric is unbounded and heavy-tailed its
@@ -432,8 +432,8 @@
           </div>
           <div>
             <dt>Images</dt>
-            <dd>A fixed set of 1,000 (161 classes); the five-metric grid uses the
-                leading 500 on every backbone</dd>
+            <dd>A fixed set of 1,000 (161 classes), used for every metric on every
+                backbone</dd>
           </div>
           <div>
             <dt>Redistributed here</dt>
@@ -499,8 +499,8 @@ cd VIT_XAI_Bench
 pip install -e ".[dev]"
 
 python scripts/smoke_test.py            # verify the install, ~30 s on CPU
-python -m xai_bench.runner --config configs/revision_grid_500.yaml
-                                        # the grid (AttnLRP: revision_grid_500_attnlrp.yaml)
+python -m xai_bench.runner --config configs/revision_grid_1000.yaml
+                                        # the grid (AttnLRP: revision_grid_1000_attnlrp.yaml)
 python scripts/build_results.py         # runs      -> canonical records
 python scripts/validate_results.py      # schema + range + duplicate checks
 python scripts/export_web_data.py       # records   -> this website</code></pre>
