@@ -43,10 +43,17 @@ import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.chdir(ROOT)
-Q = os.path.join("results", "queue_500")
-SHARDS = os.path.join("results", "revision_grid_500_shards")
+# QUEUE_N=1000 extends the grid, faithfulness and multi-seed analyses to all 1,000
+# images (queue results/queue_1000, configs/revision_grid_1000*.yaml); seed it from
+# the 500-image runs with prefill_1000.py so that only images 500-999 are computed.
+N = int(os.environ.get("QUEUE_N", "500"))
+Q = os.path.join("results", f"queue_{N}")
+SHARDS = os.path.join("results", f"revision_grid_{N}_shards")
 FAILURES_CSV = os.path.join("results", "revision_neucom", "failures.csv")
-N_GRID, N_LOC, N_FFE, N_MS = 500, 1000, 500, 500
+N_GRID, N_LOC, N_FFE, N_MS = N, 1000, N, N
+# ffe.py has no resume: when extending the 500-image run, score only images 500..N-1,
+# one job per (backbone, method), and join them with the 500-image rows (merge_ffe.py)
+FFE_FROM = 500 if N > 500 else 0
 
 MAIN = ["resnet50", "vit_base_patch16_224", "swin_base_patch4_window7_224", "pvt_v2_b2",
         "maxvit_small_tf_224", "mobilevitv2_100", "efficientvit_b1", "efficientvit_b2"]
@@ -109,7 +116,7 @@ def jobs():
 
     for m in MAIN:
         for (g, meths), h in zip(GROUPS.items(), GRID_H[m], strict=True):
-            cfg = shard_config(m, g, meths, "configs/revision_grid_500.yaml")
+            cfg = shard_config(m, g, meths, f"configs/revision_grid_{N}.yaml")
             add(f"grid:{m}:{g}", py("-m", "xai_bench.runner", "--config", cfg), h,
                 run_dir=os.path.join(SHARDS, f"{m}__{g}"))
         locs = [f"loc:{m}:integrated_gradients,rise", f"loc:{m}:lime", f"loc:{m}:occlusion"]
@@ -117,16 +124,21 @@ def jobs():
         add(locs[1], py("scripts/revision_neucom/loc.py", m, N_LOC, "lime"), 0.5)
         add(locs[2], py("scripts/revision_neucom/loc.py", m, N_LOC, "occlusion"), OCC_H[m])
         add(f"maps:{m}", py("scripts/revision_neucom/maps.py", m, N_FFE, SIGNED), 0.3, deps=locs)
-        add(f"ffe:{m}", py("scripts/revision_neucom/ffe.py", m, N_FFE, SIGNED), 1.0, deps=[f"maps:{m}"])
+        if FFE_FROM:
+            for meth in SIGNED.split(","):
+                add(f"ffe:{m}:{meth}", py("scripts/revision_neucom/ffe.py", m, N_FFE, meth, FFE_FROM), 0.4,
+                    deps=[f"maps:{m}"])
+        else:
+            add(f"ffe:{m}", py("scripts/revision_neucom/ffe.py", m, N_FFE, SIGNED), 1.0, deps=[f"maps:{m}"])
         add(f"ms:{m}:cheap", py("scripts/revision_neucom/ms.py", m, N_MS, "0,1,2", 10, CHEAP), 1.0)
         add(f"ms:{m}:vargrad", py("scripts/revision_neucom/ms.py", m, N_MS, "0,1,2", 10, "vargrad"),
             VARGRAD_H.get(m, 0.4))
-    cfg = shard_config(VIT, "attnlrp", ["attnlrp"], "configs/revision_grid_500_attnlrp.yaml")
+    cfg = shard_config(VIT, "attnlrp", ["attnlrp"], f"configs/revision_grid_{N}_attnlrp.yaml")
     add(f"grid:{VIT}:attnlrp", py("-m", "xai_bench.runner", "--config", cfg), 3.0,
         run_dir=os.path.join(SHARDS, f"{VIT}__attnlrp"))
     add(f"maps:{VIT}:attnlrp", py("scripts/revision_neucom/maps.py", VIT, N_FFE, "attnlrp"), 0.3)
-    add(f"ffe:{VIT}:attnlrp", py("scripts/revision_neucom/ffe.py", VIT, N_FFE, "attnlrp"), 0.3,
-        deps=[f"maps:{VIT}:attnlrp"])
+    add(f"ffe:{VIT}:attnlrp", py("scripts/revision_neucom/ffe.py", VIT, N_FFE, "attnlrp",
+                                 *([FFE_FROM] if FFE_FROM else [])), 0.3, deps=[f"maps:{VIT}:attnlrp"])
     add(f"ms:{VIT}:attnlrp", py("scripts/revision_neucom/ms.py", VIT, N_MS, "0,1,2", 10, "attnlrp"), 2.0)
     for m in EXTRA:
         add(f"ms:{m}:gcpp", py("scripts/revision_neucom/ms.py", m, N_MS, "0,1,2", 10,
