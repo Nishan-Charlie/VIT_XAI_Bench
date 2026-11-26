@@ -6,7 +6,12 @@ inherently signed methods, and calls Quantus with the benchmark's settings
 otherwise: normalise by max |a|, abs=False). Only the map handed to Quantus
 changes between protocols.
 
-usage: python ffe.py MODEL N METHOD[,METHOD...]
+usage: python ffe.py MODEL N METHOD[,METHOD...] [START]
+
+With START (a multiple of the batch size), only images START..N-1 are scored and the
+output is named ..._n{N}_from{START}.csv. Every batch is seeded from its first image,
+so these rows equal the rows of a full run; merge_ffe.py joins them with the rows of
+the images below START.
 """
 # ruff: noqa: B023  (the retried closures are called at once, inside their loop iteration)
 import csv
@@ -20,9 +25,11 @@ from common import DEVICE, OUT, evaluation_seed, load_data, load_model, retry_on
 
 model_name, N = sys.argv[1], int(sys.argv[2])
 methods = sys.argv[3].split(",")
+START = int(sys.argv[4]) if len(sys.argv) > 4 else 0
 data = load_data(N)
 mw = load_model(model_name)
 BS = 25
+assert START % BS == 0, "START must be a multiple of the batch size"
 rows = []
 for meth in methods:
     fp = os.path.join(OUT, "maps", f"{model_name}__{meth}.npz")
@@ -30,7 +37,7 @@ for meth in methods:
         print("missing", fp)
         continue
     z = np.load(fp)
-    idxs = [d["idx"] for d in data if str(d["idx"]) in z.files]
+    idxs = [d["idx"] for d in data if d["idx"] >= START and str(d["idx"]) in z.files]
     for proto in ("abs", "pos", "signed"):
         for s in range(0, len(idxs), BS):
             b = idxs[s:s + BS]
@@ -66,7 +73,7 @@ for meth in methods:
     torch.cuda.empty_cache()
 # one file per (model, method set): a second call for the same model (e.g. AttnLRP on
 # ViT-B/16) must not overwrite the first
-out = os.path.join(OUT, f"ffe_{model_name}_{'_'.join(methods)}_n{N}.csv")
+out = os.path.join(OUT, f"ffe_{model_name}_{'_'.join(methods)}_n{N}" + (f"_from{START}" if START else "") + ".csv")
 with open(out, "w", newline="") as f:
     w = csv.DictWriter(f, fieldnames=["model", "method", "protocol", "idx", "fc", "fe"])
     w.writeheader()

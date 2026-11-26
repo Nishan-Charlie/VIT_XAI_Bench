@@ -73,6 +73,9 @@ results/revision_neucom/maps/
 !results/revision_grid_500/
 !results/revision_grid_500/results.csv
 results/revision_grid_500_shards/
+!results/revision_grid_1000/
+!results/revision_grid_1000/results.csv
+results/revision_grid_1000_shards/
 !results/revision_grid_seeded/
 !results/revision_grid_seeded_attnlrp/
 !results/revision_grid_seeded_50/

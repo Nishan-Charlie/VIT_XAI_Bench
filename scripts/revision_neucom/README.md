@@ -35,7 +35,10 @@ python scripts/revision_neucom/fig_revision.py
 
 `extend_1000.sh` and `queue_lean.sh` are the queues that produced the first
 results; `queue_500.py` (with `prefill_500.py`) extended them and the grid to
-500 images, and the localisation of all 13 methods to 1,000 images.
+500 images, and the localisation of all 13 methods to 1,000 images. With
+`QUEUE_N=1000` and `prefill_1000.py` it extended everything to all 1,000 images;
+there `ffe.py MODEL 1000 METHOD 500` scores only images 500-999, and
+`merge_ffe.py` joins those rows with the 500-image run.
 `image_stability.py` measures how much the rankings depend on the images drawn, and
 `fig_method_family.py` draws the method taxonomy figure. AttnLRP patches timm classes, so it must run alone, in its own process.
 Each run resumes where it stopped, and a failed image is appended to

@@ -25,7 +25,7 @@ EfficientViT variants._
 
 ## Main findings
 
-- **The Pointing Game saturates.** A random peak already scores 0.53, the mean
+- **The Pointing Game saturates.** A random peak already scores 0.55, the mean
   box area. Under EBPG no method exceeds 0.60.
 - **Grad-CAM fails on linear attention.** Its EBPG on EfficientViT-B2 is 0.25,
   below the 0.31 of a random map.
@@ -56,8 +56,8 @@ EfficientViT variants._
 | **Metrics** | Faithfulness Correlation, Faithfulness Estimate, Pointing Game, EBPG, Max-Sensitivity, Sparseness, attribution time |
 | **Dataset** | 1,000 validation images of [ImageNet-S](https://github.com/LUSSeg/ImageNet-S) |
 
-The five-metric grid uses the first 500 images, on every backbone and for every
-method. EBPG and the other one-map-per-image analyses use all 1,000 images.
+Every metric, the five-metric grid included, uses all 1,000 images, on every
+backbone and for every method.
 
 ## Quick start
 
@@ -75,14 +75,14 @@ To re-run the grid, prepare the data and start a run:
 ```bash
 pip install -e ".[data]"
 python scripts/cache_imagenets.py
-python -m xai_bench.runner --config configs/revision_grid_500.yaml
-python -m xai_bench.runner --config configs/revision_grid_500_attnlrp.yaml
+python -m xai_bench.runner --config configs/revision_grid_1000.yaml
+python -m xai_bench.runner --config configs/revision_grid_1000_attnlrp.yaml
 ```
 
-The 500-image grid took about 140 GPU-hours on RTX A6000 GPUs for ViT-B/16,
-Swin-B, PVT-v2 and MaxViT-S, and about three days on an RTX 4070 Laptop GPU for
-the other four backbones; `scripts/revision_neucom/queue_500.py` splits it into
-shards that can run on several GPUs. The
+The 1,000-image grid and the faithfulness and robustness analyses took several
+hundred GPU-hours on RTX A6000, RTX 6000 Ada and RTX 3090 Ti GPUs and an RTX 4070
+Laptop GPU; `scripts/revision_neucom/queue_500.py` splits them into jobs that
+several GPUs can work through. The
 [reproducibility guide](docs/reproducibility.md) covers the remaining configs,
 the output format, expected runtimes and known limits.
 
